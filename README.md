@@ -7,6 +7,7 @@
 |SSL_CERTIFICATE_KEY|Server certificate private key(Optional)|private.key|None|
 
 TODO: ENV VAR TO CLEAR DATABASE ON STARTUP
+
 TODO: FIX SHARED CONFIG ID in users.yml
 
 https://github.com/Eugeny/tabby/blob/master/tabby-settings/src/services/configSync.service.ts
