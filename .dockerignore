@@ -1,0 +1,8 @@
+target
+Dockerfile
+.dockerignore
+.git
+.gitignore
+data.db
+.env
+users.yml

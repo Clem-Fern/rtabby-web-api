@@ -1,0 +1,9 @@
+services:
+  tlss:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - tlss-storage:/storage
+volumes:
+  tlss-storage:
