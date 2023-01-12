@@ -1,0 +1,27 @@
+[package]
+name = "tabby-light-settings-sync"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+dotenv = ["dep:dotenvy"]
+
+[dev-dependencies]
+dotenvy = "0.15.6"
+
+[dependencies]
+env_logger = "0.10.0"
+log = "0.4.16"
+dotenvy = {version = "0.15.6", optional = true}
+rustls = "0.20.7"
+rustls-pemfile = "1.0.0"
+actix-web = { version = "4.2.1", features = ["rustls"] }
+actix-web-httpauth = "0.8.0"
+chrono = { version = "0.4.22", features = ["serde"] }
+diesel = { version = "2.0.2", features = ["sqlite", "chrono", "r2d2"] }
+diesel_migrations = "2.0.0"
+serde = { version = "1.0.152", features = ["derive"] }
+serde_yaml = "0.9.16"
+uuid = "1.2.2"

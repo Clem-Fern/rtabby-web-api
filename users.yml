@@ -1,0 +1,20 @@
+# declare users
+users:
+    - token: 'dfb3863c-4b06-4fb9-8c47-e2d2c6b5bb34'     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
+      shared_configs:
+            - 'configname1'
+            - 'configname2'
+    - token: 'dfb3863c-4b06-4fb9-8c47-e2d2c6b5bb30'     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
+      shared_configs:
+            - 'configname2'
+    - token: 'dfb3863c-4b06-4fb9-8c47-e2d2c6b5bb31'     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
+
+# declare shared configs 
+shared_configs:
+    - id: 11  #Unique config id between 1 & 999 name shared configs with default parameters
+      name: 'My Config'
+    - id: 2
+      name: 'My Config n°2'
+      share_hotkey: false             # Shared hotkeys between user (default: false)
+      share_windows_settings: false   # Shared windows settings between user (default: false)
+      share_vault: false              # Shared vault between user (default: false)
