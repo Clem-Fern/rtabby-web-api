@@ -85,12 +85,10 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
     // socket var
     let bind_addr = env::var(env::ENV_BIND_ADDR).unwrap_or(String::from("0.0.0.0"));
-    let mut bind_port = env::var(env::ENV_BIND_PORT).unwrap_or(String::from("80"));
+    let bind_port = env::var(env::ENV_BIND_PORT).unwrap_or(String::from("8080"));
 
     if env::var(env::ENV_SSL_CERTIFICATE).is_ok() || env::var(env::ENV_SSL_CERTIFICATE_KEY).is_ok()
     {
-        // check if ssl vars present ?
-        bind_port = env::var(env::ENV_BIND_ADDR).unwrap_or(String::from("443")); // USE PORT 443 IF TLS ENABLE
 
         let ssl_certificate =
             env::var(env::ENV_SSL_CERTIFICATE).expect("Missing SSL_CERTIFICATE env var");
