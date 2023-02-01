@@ -1,5 +1,6 @@
 /target
 .env
+/vendor
 data.db
 users.yml
 dev.md
