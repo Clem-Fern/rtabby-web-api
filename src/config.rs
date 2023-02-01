@@ -34,10 +34,14 @@ impl From<Config> for MappedConfig {
 
         let mut configs_map : HashMap<i32, UserConfigWithoutDate> = HashMap::new();
         for config in config.shared_configs {
-            if let Entry::Vacant(e) = configs_map.entry(config.id) {
-                e.insert(config.clone());
+            if (1..999).contains(&config.id) {
+                if let Entry::Vacant(e) = configs_map.entry(config.id) {
+                    e.insert(config.clone());
+                } else {
+                    warn!("Config : Skipping config {}, which is not unique ine the configuration", &config.id);
+                }
             } else {
-                warn!("Config : Skipping config {}, which is not unique ine the configuration", &config.id);
+                warn!("Config : Skipping config {}, shared config ID must be between 1 and 999", &config.id);
             }
         }
 
