@@ -14,8 +14,8 @@ impl error::Error for StorageInitializationError {}
 impl fmt::Display for StorageInitializationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Migration(ref err) => write!(f, "Failed to initialize sqlite storage (diesel migrations): {err}"),
-            Self::R2d2(ref err) => write!(f, "Failed to initialize sqlite storage (r2d2 pool manager): {err}"),
+            Self::Migration(ref err) => write!(f, "Failed to initialize databse storage (diesel migrations): {err}"),
+            Self::R2d2(ref err) => write!(f, "Failed to initialize database storage (r2d2 pool manager): {err}"),
         }
     }
 }

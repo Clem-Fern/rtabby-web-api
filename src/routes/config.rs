@@ -1,12 +1,12 @@
 use actix_web::{web, HttpResponse, post, get, patch, Error};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 
-use crate::storage::SqlitePool;
+use crate::storage::MySqlPool;
 
 use crate::models::config::{NewUserConfig, UserConfig, UpdateUserConfig};
 
 #[get("/configs")]
-async fn show_configs(auth: BearerAuth, pool: web::Data<SqlitePool>) -> Result<HttpResponse, Error>  {
+async fn show_configs(auth: BearerAuth, pool: web::Data<MySqlPool>) -> Result<HttpResponse, Error>  {
     let token = String::from(auth.token());
     
     let configs = web::block(move || {
@@ -18,7 +18,7 @@ async fn show_configs(auth: BearerAuth, pool: web::Data<SqlitePool>) -> Result<H
 }
 
 #[post("/configs")] // create a new config
-async fn new_config(auth: BearerAuth, pool: web::Data<SqlitePool>, json: web::Json<NewUserConfig>) -> Result<HttpResponse, Error> {
+async fn new_config(auth: BearerAuth, pool: web::Data<MySqlPool>, json: web::Json<NewUserConfig>) -> Result<HttpResponse, Error> {
     let token = auth.token();
     let new_user_config = json.into_inner().into_new_config_with_user(String::from(token));
     
@@ -31,7 +31,7 @@ async fn new_config(auth: BearerAuth, pool: web::Data<SqlitePool>, json: web::Js
 }
 
 #[get("/configs/{id}")]
-async fn get_config(auth: BearerAuth, pool: web::Data<SqlitePool>, path: web::Path<i32>) -> Result<HttpResponse, Error> {
+async fn get_config(auth: BearerAuth, pool: web::Data<MySqlPool>, path: web::Path<i32>) -> Result<HttpResponse, Error> {
     let token = String::from(auth.token());
     let id = path.into_inner();
 
@@ -45,7 +45,7 @@ async fn get_config(auth: BearerAuth, pool: web::Data<SqlitePool>, path: web::Pa
 }
 
 #[patch("/configs/{id}")]
-async fn update_config(auth: BearerAuth, pool: web::Data<SqlitePool>, path: web::Path<i32>, json: web::Json<UpdateUserConfig>) -> Result<HttpResponse, Error> {
+async fn update_config(auth: BearerAuth, pool: web::Data<MySqlPool>, path: web::Path<i32>, json: web::Json<UpdateUserConfig>) -> Result<HttpResponse, Error> {
     let token = String::from(auth.token());
     let id = path.into_inner();
     let updated_config = json.into_inner();

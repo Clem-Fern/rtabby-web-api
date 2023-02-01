@@ -1,7 +1,7 @@
 extern crate diesel;
 use std::error::Error;
 
-use diesel::{prelude::*, sqlite::Sqlite};
+use diesel::{prelude::*, mysql::Mysql};
 
 extern crate diesel_migrations;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
@@ -13,7 +13,7 @@ use crate::error;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
-pub type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
+pub type MySqlPool = Pool<ConnectionManager<MysqlConnection>>;
 
 #[derive(Clone)]
 pub struct Storage {
@@ -36,14 +36,14 @@ impl Storage {
         Ok(())
     }
 
-    pub fn pool(self) -> Result<SqlitePool, error::StorageInitializationError> {
+    pub fn pool(self) -> Result<MySqlPool, error::StorageInitializationError> {
         let pool = Pool::new(ConnectionManager::new(self.url()))?;
         Ok(pool)
     }
 }
 
 fn run_migrations(
-    connection: &mut impl MigrationHarness<Sqlite>,
+    connection: &mut impl MigrationHarness<Mysql>,
 ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
     if connection.has_pending_migration(MIGRATIONS)? {
         info!("Running pending migrations.");
@@ -53,6 +53,6 @@ fn run_migrations(
     Ok(())
 }
 
-pub fn establish_connection(url: &str) -> SqliteConnection {
-    SqliteConnection::establish(url).unwrap_or_else(|_| panic!("Error connecting to {url}"))
+pub fn establish_connection(url: &str) -> MysqlConnection {
+    MysqlConnection::establish(url).unwrap_or_else(|_| panic!("Error connecting to {url}"))
 }

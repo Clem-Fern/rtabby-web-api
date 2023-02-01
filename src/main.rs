@@ -65,7 +65,7 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
     info!("{} loaded => {} users found, {} shared configs found", config_file_name, config.users.len(), config.shared_configs.len());
 
-    // INIT SQLITE STORAGE
+    // INIT DATABASE STORAGE
     let storage: Storage = Storage::new();
     let pool = storage.clone().pool()?;
     storage.init()?;
@@ -75,7 +75,7 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
     let mut server = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(config.clone())) // App Config Data
-            .app_data(web::Data::new(pool.clone())) // Sqlite Pool Data
+            .app_data(web::Data::new(pool.clone())) // Database Pool Data
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
             // AUTH
             .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator))

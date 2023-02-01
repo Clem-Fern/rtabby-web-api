@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use diesel::{Queryable, Insertable, Identifiable, SqliteConnection, QueryDsl, RunQueryDsl, ExpressionMethods, OptionalExtension, BoolExpressionMethods, NullableExpressionMethods};
+use diesel::{Queryable, Insertable, Identifiable, MysqlConnection, QueryDsl, RunQueryDsl, ExpressionMethods, OptionalExtension, BoolExpressionMethods, NullableExpressionMethods};
 use chrono::NaiveDateTime;
 
 use super::DbError;
@@ -35,7 +35,7 @@ pub struct UserConfig {
 
 impl UserConfig {
 
-    pub fn get_all_config_by_user(conn: &mut SqliteConnection, user_id: &str) -> Result<Vec<UserConfig>, DbError> {
+    pub fn get_all_config_by_user(conn: &mut MysqlConnection, user_id: &str) -> Result<Vec<UserConfig>, DbError> {
 
         use crate::schema::configs::dsl::*;
 
@@ -44,21 +44,21 @@ impl UserConfig {
         Ok(list)
     }
     
-    pub fn insert_new_user_config(conn: &mut SqliteConnection, new_config: NewUserConfigWithUser) -> Result<(), DbError> {
+    pub fn insert_new_user_config(conn: &mut MysqlConnection, new_config: NewUserConfigWithUser) -> Result<(), DbError> {
 
         diesel::insert_into(all_configs).values(&new_config).execute(conn)?;
 
         Ok(())
     }
 
-    pub fn get_config_by_id_and_user(conn: &mut SqliteConnection, config_id: i32, user_id: &str) -> Result<Option<UserConfig>, DbError> {
+    pub fn get_config_by_id_and_user(conn: &mut MysqlConnection, config_id: i32, user_id: &str) -> Result<Option<UserConfig>, DbError> {
 
         use crate::schema::configs::dsl::*;
 
         Ok(all_configs.filter(id.eq(config_id).and(user.nullable().eq(user_id))).first::<UserConfig>(conn).optional()?)
     }
 
-    pub fn update_user_config_content(conn: &mut SqliteConnection, config: UserConfig, new_content: &str) -> Result<(), DbError> {
+    pub fn update_user_config_content(conn: &mut MysqlConnection, config: UserConfig, new_content: &str) -> Result<(), DbError> {
 
         use crate::schema::configs::dsl::*;
 
