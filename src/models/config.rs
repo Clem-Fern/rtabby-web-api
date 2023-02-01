@@ -110,7 +110,7 @@ pub struct NewUserConfigWithUser {
 
 impl NewUserConfig {
     pub fn into_new_config_with_user(self, user: String) -> NewUserConfigWithUser {
-        NewUserConfigWithUser { name: self.name, user: user }
+        NewUserConfigWithUser { name: self.name, user }
     }
 }
 

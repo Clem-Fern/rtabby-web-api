@@ -30,7 +30,7 @@ impl TLSConfigBuilder {
         let certfile = File::open(filename).map_err(|e| {
             Error::new(
                 ErrorKind::Other,
-                format!("failed to open certificate file {}: {}", filename, e),
+                format!("failed to open certificate file {filename}: {e}"),
             )
         })?;
         let mut reader = BufReader::new(certfile);
@@ -40,8 +40,7 @@ impl TLSConfigBuilder {
             Error::new(
                 ErrorKind::Other,
                 format!(
-                    "rustls_pemfile failed to collect certificates from {}: {}",
-                    filename, e
+                    "rustls_pemfile failed to collect certificates from {filename}: {e}"
                 ),
             )
         })?
@@ -53,8 +52,7 @@ impl TLSConfigBuilder {
             return Err(error::TlsError::Io(Error::new(
                 ErrorKind::Other,
                 format!(
-                    "no certificates found in {:?}",
-                    filename
+                    "no certificates found in {filename}"
                 ),
             )));
         }
@@ -68,7 +66,7 @@ impl TLSConfigBuilder {
         let keyfile = File::open(filename).map_err(|e| {
             Error::new(
                 ErrorKind::Other,
-                format!("failed to open certificate file {}: {}", filename, e),
+                format!("failed to open certificate file {filename}: {e}"),
             )
         })?;
         let mut reader = BufReader::new(keyfile);
@@ -80,8 +78,7 @@ impl TLSConfigBuilder {
                 Error::new(
                     ErrorKind::Other,
                     format!(
-                        "rustls_pemfile failed to collect private key from {}: {}",
-                        filename, e
+                        "rustls_pemfile failed to collect private key from {filename}: {e}"
                     ),
                 )
             })? {
@@ -96,8 +93,7 @@ impl TLSConfigBuilder {
             return Err(error::TlsError::Io(Error::new(
                 ErrorKind::Other,
                 format!(
-                    "no keys found in {:?} (encrypted keys not supported)",
-                    filename
+                    "no keys found in {filename} (encrypted keys not supported)"
                 ),
             )));
         }
@@ -106,8 +102,7 @@ impl TLSConfigBuilder {
             return Err(error::TlsError::Io(Error::new(
                 ErrorKind::Other,
                 format!(
-                    "expected a single private key in {:?}",
-                    filename
+                    "expected a single private key in {filename}"
                 ),
             )));
         }

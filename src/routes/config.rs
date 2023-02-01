@@ -39,8 +39,8 @@ async fn get_config(auth: BearerAuth, pool: web::Data<SqlitePool>, path: web::Pa
         let mut conn = pool.get()?;
         UserConfig::get_config_by_id_and_user(&mut conn, id, &token)
     }).await?.map_err(actix_web::error::ErrorInternalServerError)? {
-        Some(config) => return Ok(HttpResponse::Ok().json(config)), // TODO: remove user from config
-        None => return Ok(HttpResponse::Unauthorized().finish()),
+        Some(config) => Ok(HttpResponse::Ok().json(config)), // TODO: remove user from config
+        None => Ok(HttpResponse::Unauthorized().finish()),
     }
 }
 

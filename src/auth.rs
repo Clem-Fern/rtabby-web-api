@@ -11,6 +11,6 @@ pub async fn bearer_auth_validator(req: ServiceRequest, credentials: BearerAuth)
         Ok(req)
     } else {
         warn!("Authentification failed for {:?}", req.connection_info().peer_addr());
-        return Err((ErrorUnauthorized("Invalide authentication token !"), req));
+        Err((ErrorUnauthorized("Invalide authentication token !"), req))
     }    
 }

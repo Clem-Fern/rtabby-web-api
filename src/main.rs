@@ -76,7 +76,7 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
         App::new()
             .app_data(web::Data::new(config.clone())) // App Config Data
             .app_data(web::Data::new(pool.clone())) // Sqlite Pool Data
-            .wrap(middleware::Logger::default().log_target(format!("{}", env!("CARGO_PKG_NAME"))))
+            .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
             // AUTH
             .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator))
             //
@@ -102,14 +102,14 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
             .load_private_key(&ssl_certificate_key)?
             .build()?;
 
-        info!("Binding HTTPS Listener on {}:{}", bind_addr, bind_port);
-        server = server.bind_rustls(format!("{}:{}", bind_addr, bind_port), config)?;
+        info!("Binding HTTPS Listener on {bind_addr}:{bind_port}");
+        server = server.bind_rustls(format!("{bind_addr}:{bind_port}"), config)?;
     } else {
-        info!("Binding HTTP Listener on {}:{}", bind_addr, bind_port);
-        server = server.bind(format!("{}:{}", bind_addr, bind_port))?;
+        info!("Binding HTTP Listener on {bind_addr}:{bind_port}");
+        server = server.bind(format!("{bind_addr}:{bind_port}"))?;
     }
 
-    info!("Starting HTTP Listener on {}:{}", bind_addr, bind_port);
+    info!("Starting HTTP Listener on {bind_addr}:{bind_port}");
     server.run().await?;
     Ok(())
 }

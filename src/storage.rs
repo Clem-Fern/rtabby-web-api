@@ -54,5 +54,5 @@ fn run_migrations(
 }
 
 pub fn establish_connection(url: &str) -> SqliteConnection {
-    SqliteConnection::establish(url).unwrap_or_else(|_| panic!("Error connecting to {}", url))
+    SqliteConnection::establish(url).unwrap_or_else(|_| panic!("Error connecting to {url}"))
 }

@@ -1,7 +1,6 @@
 use std::error;
 use std::fmt;
 use std::io;
-use serde_yaml;
 use diesel::r2d2;
 
 #[derive(Debug)]
@@ -15,8 +14,8 @@ impl error::Error for StorageInitializationError {}
 impl fmt::Display for StorageInitializationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Migration(ref err) => write!(f, "Failed to initialize sqlite storage (diesel migrations): {}", err),
-            Self::R2d2(ref err) => write!(f, "Failed to initialize sqlite storage (r2d2 pool manager): {}", err),
+            Self::Migration(ref err) => write!(f, "Failed to initialize sqlite storage (diesel migrations): {err}"),
+            Self::R2d2(ref err) => write!(f, "Failed to initialize sqlite storage (r2d2 pool manager): {err}"),
         }
     }
 }
@@ -44,8 +43,8 @@ impl error::Error for TlsError {}
 impl fmt::Display for TlsError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Io(ref err) => write!(f, "Encountered IO error while building tls configuration: {}", err),
-            Self::Rustls(ref err) => write!(f, "Encountered Rustls error while building tls configuration: {}", err),
+            Self::Io(ref err) => write!(f, "Encountered IO error while building tls configuration: {err}"),
+            Self::Rustls(ref err) => write!(f, "Encountered Rustls error while building tls configuration: {err}"),
         }
     }
 }
@@ -75,9 +74,9 @@ impl error::Error for ConfigError {}
 impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Io(ref err) => write!(f, "Encountered IO error while building deserializing configuration: {}", err),
-            Self::Yaml(ref err) => write!(f, "Encountered Yaml error while building deserializing configuration: {}", err),
-            Self::DuplicatedEntry(ref entry) => write!(f, "The following data is not unique in configuration: {}", entry),
+            Self::Io(ref err) => write!(f, "Encountered IO error while building deserializing configuration: {err}"),
+            Self::Yaml(ref err) => write!(f, "Encountered Yaml error while building deserializing configuration: {err}"),
+            Self::DuplicatedEntry(ref entry) => write!(f, "The following data is not unique in configuration: {entry}"),
         }
     }
 }

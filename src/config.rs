@@ -2,7 +2,7 @@ use log::warn;
 use serde::{Deserialize};
 use crate::models::{user::{User, UserWithoutToken}, config::UserConfigWithoutDate};
 use crate::error::ConfigError;
-use std::collections::HashMap;
+use std::collections::{HashMap, hash_map::Entry};
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Config {
@@ -15,7 +15,7 @@ pub fn load_file(file: &str) -> Result<Config, ConfigError> {
     serde_yaml::from_reader(config_file).map_err(ConfigError::Yaml)
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct MappedConfig {
     pub users: HashMap<String, UserWithoutToken>,
     pub shared_configs: HashMap<i32, UserConfigWithoutDate>,
@@ -34,10 +34,10 @@ impl From<Config> for MappedConfig {
 
         let mut configs_map : HashMap<i32, UserConfigWithoutDate> = HashMap::new();
         for config in config.shared_configs {
-            if configs_map.contains_key(&config.id) {
-                warn!("Config : Skipping config {}, which is not unique ine the configuration", &config.id);
+            if let Entry::Vacant(e) = configs_map.entry(config.id) {
+                e.insert(config.clone());
             } else {
-                configs_map.insert(config.id, config.clone());
+                warn!("Config : Skipping config {}, which is not unique ine the configuration", &config.id);
             }
         }
 
@@ -47,14 +47,4 @@ impl From<Config> for MappedConfig {
         }
 
     }
-}
-
-impl Default for MappedConfig {
-    fn default() -> Self {
-        MappedConfig { 
-            users: HashMap::default(),
-            shared_configs: HashMap::default(),
-        }
-    }
-
 }
