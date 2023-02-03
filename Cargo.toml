@@ -5,6 +5,7 @@ edition = "2021"
 
 [features]
 dotenv = ["dep:dotenvy"]
+mysqlclient-static = []
 
 [dev-dependencies]
 dotenvy = "0.15.6"

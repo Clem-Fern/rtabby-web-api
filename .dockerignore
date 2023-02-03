@@ -6,3 +6,8 @@ Dockerfile
 data.db
 .env
 users.yml
+config
+build
+lib
+mariadb-connector-c-3.3.3-src.tar.gz
+mariadb-connector-c-3.3.3-src

@@ -4,3 +4,9 @@
 data.db
 users.yml
 dev.md
+/config
+/build
+/lib
+mariadb-connector-c-3.3.3-src.tar.gz
+/mariadb-connector-c-3.3.3-src
+
