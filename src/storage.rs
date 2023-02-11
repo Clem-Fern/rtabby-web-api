@@ -22,7 +22,7 @@ pub struct Storage {
 
 impl Storage {
     pub fn new() -> Self {
-        let database_url = env::var(env::ENV_DATABASE_URL).unwrap_or("file:data.db".to_string());
+        let database_url = env::var(env::ENV_DATABASE_URL).unwrap_or("mysql://tabby:tabby@db/tabby".to_string());
         Storage { url: database_url }
     }
 
