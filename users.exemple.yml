@@ -4,10 +4,10 @@ users:
       shared_config:
             - 11
             - 2
-    - token: 'b841dbba-42c6-4161-9735-dc1303583743':     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
+    - token: 'b841dbba-42c6-4161-9735-dc1303583743'     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
       shared_config:
             - 2                              # Shared config id 
-    - token: 'b841dbba-42c6-4161-9735-dc1303583743':     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
+    - token: 'b841dbba-42c6-4161-9735-dc1303583743'     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
       shared_config: []                                  # no shared config
 
 # declare shared configs 
@@ -16,6 +16,3 @@ shared_configs:
       name: 'My Config'
     - id: 2
       name: 'My Config n°2'
-      share_hotkey: false             # Shared hotkeys between user (default: false)
-      share_windows_settings: false   # Shared windows settings between user (default: false)
-      share_vault: false              # Shared vault between user (default: false)
