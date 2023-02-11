@@ -1,8 +1,8 @@
 services:
   tlss:
     container_name: tlss
-    #build: .
-    image: tabby-light-settings-sync
+    build: .
+    #image: tabby-light-settings-sync
     ports:
       - "8080:8080"
     environment:
