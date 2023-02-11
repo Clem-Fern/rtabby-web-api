@@ -4,10 +4,10 @@ use log::{info, error};
 
 use std::error::Error;
 
-mod config;
+mod app_config;
 mod env;
 mod error;
-use config::{Config, MappedConfig};
+use app_config::{AppConfig, MappedAppConfig};
 mod storage;
 use storage::Storage;
 
@@ -60,8 +60,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 async fn run_app() -> Result<(), Box<dyn Error>> {
     // LOAD CONFIG FILE
     let config_file_name = env::var(env::ENV_CONFIG_FILE).unwrap_or(String::from("users.yml"));
-    let config: Config = config::load_file(&config_file_name)?;
-    let config: MappedConfig = config.into();
+    let config: AppConfig = app_config::load_file(&config_file_name)?;
+    let config: MappedAppConfig = config.into();
 
     info!("{} loaded => {} users found, {} shared configs found", config_file_name, config.users.len(), config.shared_configs.len());
 

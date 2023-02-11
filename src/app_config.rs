@@ -5,24 +5,24 @@ use crate::error::ConfigError;
 use std::collections::{HashMap, hash_map::Entry};
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct Config {
+pub struct AppConfig {
     pub users: Vec<User>,
     pub shared_configs: Vec<UserConfigWithoutDate>,
 }
 
-pub fn load_file(file: &str) -> Result<Config, ConfigError> {
+pub fn load_file(file: &str) -> Result<AppConfig, ConfigError> {
     let config_file = std::fs::File::open(file).map_err(ConfigError::Io)?;
     serde_yaml::from_reader(config_file).map_err(ConfigError::Yaml)
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct MappedConfig {
+pub struct MappedAppConfig {
     pub users: HashMap<String, UserWithoutToken>,
     pub shared_configs: HashMap<i32, UserConfigWithoutDate>,
 }
 
-impl From<Config> for MappedConfig {
-    fn from(config: Config) -> MappedConfig {
+impl From<AppConfig> for MappedAppConfig {
+    fn from(config: AppConfig) -> MappedAppConfig {
         let mut users_map: HashMap<String, UserWithoutToken> = HashMap::new();
         for user in config.users {
             if users_map.contains_key(&user.token) {
@@ -45,7 +45,7 @@ impl From<Config> for MappedConfig {
             }
         }
 
-        MappedConfig {
+        MappedAppConfig {
             users: users_map,
             shared_configs: configs_map,
         }
