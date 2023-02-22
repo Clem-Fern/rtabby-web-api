@@ -26,18 +26,18 @@ impl Storage {
         Storage { url: database_url }
     }
 
-    pub fn url(self) -> String {
-        self.url
+    pub fn url(&self) -> &String {
+        &self.url
     }
 
-    pub fn init(self) -> Result<(), error::StorageInitializationError> {
+    pub fn init(&self) -> Result<(), error::StorageInitializationError> {
         let mut conn = establish_connection(self.url().as_str());
         run_migrations(&mut conn)?;
         Ok(())
     }
 
-    pub fn pool(self) -> Result<MySqlPool, error::StorageInitializationError> {
-        let pool = Pool::new(ConnectionManager::new(self.url()))?;
+    pub fn pool(&self) -> Result<MySqlPool, error::StorageInitializationError> {
+        let pool = Pool::new(ConnectionManager::new(self.url().clone()))?;
         Ok(pool)
     }
 }

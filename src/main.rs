@@ -36,11 +36,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             "info"
         },
     ))
-    /*.format(|buf, record| {
-        use io::Write;
-        let ts = buf.timestamp();
-        writeln!(buf, "[{} {} {}] {}", ts, buf.default_styled_level(record.level()), env!("CARGO_PKG_NAME"), record.args())
-    })*/
     .init();
     info!("Running v{}", env!("CARGO_PKG_VERSION"));
 
@@ -67,9 +62,9 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
     // INIT DATABASE STORAGE
     let storage: Storage = Storage::new();
-    let pool = storage.clone().pool()?;
     storage.init()?;
-
+    let pool = storage.pool()?;
+    
     // TODO : storage clean up on start
 
     let mut server = HttpServer::new(move || {
