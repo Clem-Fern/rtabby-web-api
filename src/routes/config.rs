@@ -1,18 +1,34 @@
 use actix_web::{web, HttpResponse, post, get, patch, Error};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 
+use crate::app_config::MappedAppConfig;
 use crate::storage::MySqlPool;
 
 use crate::models::config::{NewUserConfig, UserConfig, UpdateUserConfig};
 
 #[get("/configs")]
-async fn show_configs(auth: BearerAuth, pool: web::Data<MySqlPool>) -> Result<HttpResponse, Error>  {
+async fn show_configs(auth: BearerAuth, app_config: web::Data<MappedAppConfig>, pool: web::Data<MySqlPool>) -> Result<HttpResponse, Error>  {
     let token = String::from(auth.token());
     
-    let configs = web::block(move || {
-        let mut conn = pool.get()?;
-        UserConfig::get_all_config_by_user(&mut conn, &token)
+    let mtoken = token.clone();
+    let mpool = pool.clone();
+    let mut configs = web::block(move || {
+        let mut conn = mpool.get()?;
+        UserConfig::get_all_config_by_user(&mut conn, &mtoken)
     }).await?.map_err(actix_web::error::ErrorInternalServerError)?;
+
+    for shared_config in &app_config.users.get(&token).unwrap().shared_configs {
+        let mtoken = token.clone();   
+        let mpool = pool.clone();
+        let id = shared_config.to_owned();
+
+        let config = web::block(move || {
+            let mut conn = mpool.get()?;
+            UserConfig::get_config_by_id_and_user(&mut conn, id, &mtoken)
+        }).await?.map_err(actix_web::error::ErrorInternalServerError)?.unwrap();
+
+        configs.push(config);
+    }
 
     Ok(HttpResponse::Ok().json(configs))
 }
@@ -21,7 +37,7 @@ async fn show_configs(auth: BearerAuth, pool: web::Data<MySqlPool>) -> Result<Ht
 async fn new_config(auth: BearerAuth, pool: web::Data<MySqlPool>, json: web::Json<NewUserConfig>) -> Result<HttpResponse, Error> {
     let token = auth.token();
     let new_user_config = json.into_inner().into_new_config_with_user(String::from(token));
-    
+
     web::block(move || {
         let mut conn = pool.get()?;
         UserConfig::insert_new_user_config(&mut conn, new_user_config)    

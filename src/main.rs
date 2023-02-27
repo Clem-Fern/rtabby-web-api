@@ -62,7 +62,7 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
     // INIT DATABASE STORAGE
     let storage: Storage = Storage::new();
-    storage.init()?;
+    storage.init(config.clone())?;
     let pool = storage.pool()?;
     
     // TODO : storage clean up on start

@@ -6,7 +6,7 @@ pub struct User {
     #[serde(deserialize_with = "uuid_validator")]
     pub token: String,
     #[serde(default)]
-    pub shared_configs: Vec<String>,
+    pub shared_configs: Vec<i32>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -23,7 +23,7 @@ impl From<User> for UserWithoutSharedConfig {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct UserWithoutToken {
-    pub shared_configs: Vec<String>,
+    pub shared_configs: Vec<i32>,
 }
 
 impl From<User> for UserWithoutToken {

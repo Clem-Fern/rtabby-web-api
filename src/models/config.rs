@@ -79,7 +79,7 @@ pub struct UserConfigWithoutDate {
 #[derive(Clone, Debug, Serialize, Deserialize, Insertable)]
 #[diesel(table_name = configs)]
 pub struct NewUserConfig {
-    name: String,
+    pub name: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Insertable)]
