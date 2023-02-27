@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use diesel::{Queryable, Insertable, Identifiable, MysqlConnection, QueryDsl, RunQueryDsl, ExpressionMethods, OptionalExtension, BoolExpressionMethods, NullableExpressionMethods};
-use chrono::NaiveDateTime;
+use chrono::{NaiveDateTime, Utc};
 
 use super::DbError;
 
@@ -16,15 +16,6 @@ pub struct UserConfig {
 
     #[serde(default)]
     pub user: Option<String>,
-
-    #[serde(default)]
-    pub shared: Option<i32>,
-    #[serde(default)]
-    pub share_hotkey: bool,
-    #[serde(default)]
-    pub share_windows_settings: bool,
-    #[serde(default)]
-    pub share_vault: bool,
 
     #[serde(default)]
     pub content: String,
@@ -64,7 +55,7 @@ impl UserConfig {
 
         diesel::update(&config).set((
             content.eq(new_content),
-            modified_at.eq(diesel::dsl::now)
+            modified_at.eq(Utc::now().naive_utc())
         )).execute(conn)?;
 
         Ok(())
@@ -80,15 +71,6 @@ pub struct UserConfigWithoutDate {
 
     #[serde(default)]
     pub user: Option<String>,
-
-    #[serde(default)]
-    pub shared: Option<i32>,
-    #[serde(default)]
-    pub share_hotkey: bool,
-    #[serde(default)]
-    pub share_windows_settings: bool,
-    #[serde(default)]
-    pub share_vault: bool,
 
     #[serde(default)]
     pub content: String,

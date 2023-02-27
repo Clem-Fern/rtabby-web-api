@@ -3,14 +3,26 @@
 diesel::table! {
     configs (id) {
         id -> Integer,
-        name -> Text,
-        user -> Nullable<Text>,
-        shared -> Nullable<Integer>,
-        share_hotkey -> Bool,
-        share_windows_settings -> Bool,
-        share_vault -> Bool,
+        name -> Varchar,
+        user -> Nullable<Varchar>,
         content -> Text,
-        created_at -> Timestamp,
-        modified_at -> Timestamp,
+        created_at -> Datetime,
+        modified_at -> Datetime,
     }
 }
+
+diesel::table! {
+    user_configs (config, user) {
+        config -> Integer,
+        user -> Varchar,
+        name -> Varchar,
+        content -> Text,
+    }
+}
+
+diesel::joinable!(user_configs -> configs (config));
+
+diesel::allow_tables_to_appear_in_same_query!(
+    configs,
+    user_configs,
+);
