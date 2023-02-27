@@ -19,5 +19,6 @@ cargo run -F dotenv     # Use dotenv feature to load the .env
 
 ## Quick start mariadb server docker
 ```
-docker run -d --name tabby-mariadb --env MARIADB_USER=tabby --env MARIADB_PASSWORD=tabby --env MARIADB_RANDOM_ROOT_PASSWORD=yes  mariadb:latest
+docker run -d --name tabby-mariadb --env MARIADB_USER=tabby --env MARIADB_PASSWORD=tabby --env MARIADB_DATABASE=tabby --env MARIADB_RANDOM_ROOT_PASSWORD=yes -p 3306:3306 mariadb:latest
 ```
+
