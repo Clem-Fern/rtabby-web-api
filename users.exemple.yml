@@ -1,18 +1,18 @@
 # declare users
 users:
     - token: 'dfb3863c-4b06-4fb9-8c47-e2d2c6b5bb29'     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
-      shared_config:
+      shared_configs:
             - 11
             - 2
     - token: 'b841dbba-42c6-4161-9735-dc1303583743'     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
-      shared_config:
+      shared_configs:
             - 2                              # Shared config id 
     - token: 'b841dbba-42c6-4161-9735-dc1303583743'     # Unique uuidv4 token (https://www.uuidgenerator.net/version4)
-      shared_config: []                                  # no shared config
+      shared_configs: []                                  # no shared config
 
 # declare shared configs 
 shared_configs:
     - id: 11  #Unique config id between 1 & 999 name shared configs with default parameters
-      name: 'My Config'
+      name: 'My Shared Config'
     - id: 2
-      name: 'My Config n°2'
+      name: 'My Shared Config n°2'

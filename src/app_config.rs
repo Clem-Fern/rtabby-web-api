@@ -34,7 +34,7 @@ impl From<AppConfig> for MappedAppConfig {
 
         let mut configs_map : HashMap<i32, NewUserConfig> = HashMap::new();
         for config in config.shared_configs {
-            if (1..999).contains(&config.id) {
+            if (1..crate::models::config::MAX_SHARED_CONFIG_ID).contains(&config.id) {
                 if let Entry::Vacant(e) = configs_map.entry(config.id) {
                     e.insert(NewUserConfig { name: config.name});
                 } else {

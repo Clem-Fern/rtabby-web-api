@@ -5,6 +5,8 @@ use chrono::{NaiveDateTime, Utc};
 
 use super::DbError;
 
+pub const MAX_SHARED_CONFIG_ID: i32 = 999;
+
 use crate::schema::configs;
 use crate::schema::configs::dsl::configs as all_configs;
 
@@ -45,7 +47,7 @@ impl UserConfig {
 
     pub fn insert_new_user_config_or_update(conn: &mut MysqlConnection, config: UserConfigWithoutDate) -> Result<(), DbError> {
 
-        let query = sql_query("INSERT INTO configs(id, name) VALUES (?,?) ON CONFLICT (id) DO UPDATE SET name=?;");
+        let query = sql_query("INSERT INTO configs(id, name) VALUES (?,?) ON DUPLICATE KEY UPDATE name=?;");
         
         query.bind::<Integer, _>(config.id).bind::<VarChar, _>(config.name.clone()).bind::<VarChar, _>(config.name).execute(conn)?;
 
@@ -57,6 +59,13 @@ impl UserConfig {
         use crate::schema::configs::dsl::*;
 
         Ok(all_configs.filter(id.eq(config_id).and(user.nullable().eq(user_id))).first::<UserConfig>(conn).optional()?)
+    }
+
+    pub fn get_shared_config_by_id(conn: &mut MysqlConnection, config_id: i32) -> Result<Option<UserConfig>, DbError> {
+
+        use crate::schema::configs::dsl::*;
+
+        Ok(all_configs.filter(id.eq(config_id).and(user.is_null())).first::<UserConfig>(conn).optional()?)
     }
 
     pub fn update_user_config_content(conn: &mut MysqlConnection, config: UserConfig, new_content: &str) -> Result<(), DbError> {
