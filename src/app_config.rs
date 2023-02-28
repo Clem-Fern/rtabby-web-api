@@ -26,7 +26,7 @@ impl From<AppConfig> for MappedAppConfig {
         let mut users_map: HashMap<String, UserWithoutToken> = HashMap::new();
         for user in config.users {
             if users_map.contains_key(&user.token) {
-                warn!("Config : Skipping user {}, which is not unique ine the configuration", &user.token);
+                warn!("Config : Skipping user {}, which is not unique in the configuration", &user.token);
             } else {
                 users_map.insert(user.token.clone(), user.clone().into());
             }
@@ -38,7 +38,7 @@ impl From<AppConfig> for MappedAppConfig {
                 if let Entry::Vacant(e) = configs_map.entry(config.id) {
                     e.insert(NewUserConfig { name: config.name});
                 } else {
-                    warn!("Config : Skipping config {}, which is not unique ine the configuration", &config.id);
+                    warn!("Config : Skipping config {}, which is not unique in the configuration", &config.id);
                 }
             } else {
                 warn!("Config : Skipping config {}, shared config ID must be between 1 and 999", &config.id);
