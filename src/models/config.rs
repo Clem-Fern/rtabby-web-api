@@ -1,5 +1,6 @@
+use diesel::sql_types::{Integer, VarChar};
 use serde::{Serialize, Deserialize};
-use diesel::{Queryable, Insertable, Identifiable, MysqlConnection, QueryDsl, RunQueryDsl, ExpressionMethods, OptionalExtension, BoolExpressionMethods, NullableExpressionMethods};
+use diesel::{Queryable, Insertable, Identifiable, MysqlConnection, QueryDsl, RunQueryDsl, ExpressionMethods, OptionalExtension, BoolExpressionMethods, NullableExpressionMethods, AsChangeset, sql_query};
 use chrono::{NaiveDateTime, Utc};
 
 use super::DbError;
@@ -30,7 +31,7 @@ impl UserConfig {
 
         use crate::schema::configs::dsl::*;
 
-        let list = all_configs.filter(user.eq(user_id)).load::<UserConfig>(conn)?;
+        let list = configs.filter(user.eq(user_id)).load::<UserConfig>(conn)?;
 
         Ok(list)
     }
@@ -38,6 +39,15 @@ impl UserConfig {
     pub fn insert_new_user_config(conn: &mut MysqlConnection, new_config: NewUserConfigWithUser) -> Result<(), DbError> {
 
         diesel::insert_into(all_configs).values(&new_config).execute(conn)?;
+
+        Ok(())
+    }
+
+    pub fn insert_new_user_config_or_update(conn: &mut MysqlConnection, config: UserConfigWithoutDate) -> Result<(), DbError> {
+
+        let query = sql_query("INSERT INTO configs(id, name) VALUES (?,?) ON CONFLICT (id) DO UPDATE SET name=?;");
+        
+        query.bind::<Integer, _>(config.id).bind::<VarChar, _>(config.name.clone()).bind::<VarChar, _>(config.name).execute(conn)?;
 
         Ok(())
     }
@@ -62,7 +72,7 @@ impl UserConfig {
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, Identifiable, Queryable)]
+#[derive(Clone, Debug, Serialize, Deserialize, Identifiable, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = configs)]
 #[diesel(primary_key(id))]
 pub struct UserConfigWithoutDate {
@@ -82,18 +92,22 @@ pub struct NewUserConfig {
     pub name: String,
 }
 
+impl NewUserConfig {
+    pub fn into_new_user_config_with_user(self, user: String) -> NewUserConfigWithUser {
+        NewUserConfigWithUser { name: self.name, user }
+    }
+
+    pub fn into_user_config_without_date(self, id: i32) -> UserConfigWithoutDate {
+        UserConfigWithoutDate { id, name: self.name, user: Option::default(), content: String::default() }
+    }
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize, Insertable)]
 #[diesel(table_name = configs)]
 pub struct NewUserConfigWithUser {
     name: String,
     #[serde(default)]
     pub user: String,
-}
-
-impl NewUserConfig {
-    pub fn into_new_config_with_user(self, user: String) -> NewUserConfigWithUser {
-        NewUserConfigWithUser { name: self.name, user }
-    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Insertable)]

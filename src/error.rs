@@ -3,10 +3,13 @@ use std::fmt;
 use std::io;
 use diesel::r2d2;
 
+use crate::models::DbError;
+
 #[derive(Debug)]
 pub enum StorageInitializationError {
     Migration(Box<dyn error::Error + Send + Sync + 'static>),
-    R2d2(r2d2::PoolError)
+    R2d2(r2d2::PoolError),
+    Db(DbError)
 }
 
 impl error::Error for StorageInitializationError {}
@@ -16,6 +19,7 @@ impl fmt::Display for StorageInitializationError {
         match *self {
             Self::Migration(ref err) => write!(f, "Failed to initialize databse storage (diesel migrations): {err}"),
             Self::R2d2(ref err) => write!(f, "Failed to initialize database storage (r2d2 pool manager): {err}"),
+            Self::Db(ref err) => write!(f, "Encountered error on database query: {err}"),
         }
     }
 }

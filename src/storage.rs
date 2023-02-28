@@ -11,6 +11,7 @@ use diesel::r2d2::{Pool, ConnectionManager};
 use crate::app_config::MappedAppConfig;
 use crate::env;
 use crate::error;
+use crate::models::config::UserConfig;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
@@ -36,9 +37,15 @@ impl Storage {
 
         run_migrations(&mut conn)?; // RUN PENDING MIGRATIONS
 
-        
-        for (_id, _config) in app_config.shared_configs {
-            // TODO: create shared config
+        info!("Setup shared configuration(s): {}", app_config.shared_configs.len());        
+        for (id, config) in app_config.shared_configs {
+            match UserConfig::insert_new_user_config_or_update(&mut conn, config.into_user_config_without_date(id)) {
+                Ok(_) => {},
+                Err(e) => {
+                    error!("Failed to create or update shared configuration \"{id}\"");
+                    return Err(error::StorageInitializationError::Db(e));
+                }
+            }
         }
 
         Ok(())
