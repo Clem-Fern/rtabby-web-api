@@ -3,9 +3,10 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::debug;
 
 use crate::app_config::MappedAppConfig;
+use crate::models::user_config::UserConfig;
 use crate::storage::MySqlPool;
 
-use crate::models::config::{NewUserConfig, UpdateUserConfig, UserConfig};
+use crate::models::config::{NewConfig, UpdateConfig, Config};
 
 #[get("/configs")]
 async fn show_configs(
@@ -19,7 +20,7 @@ async fn show_configs(
     let mpool = pool.clone();
     let mut configs = web::block(move || {
         let mut conn = mpool.get()?;
-        UserConfig::get_all_config_by_user(&mut conn, &mtoken)
+        Config::get_all_config_by_user(&mut conn, &mtoken)
     })
     .await?
     .map_err(actix_web::error::ErrorInternalServerError)?;
@@ -31,7 +32,7 @@ async fn show_configs(
 
         let config = web::block(move || {
             let mut conn = mpool.get()?;
-            UserConfig::get_shared_config_by_id(&mut conn, id)
+            Config::get_shared_config_by_id(&mut conn, id)
         })
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?
@@ -47,7 +48,7 @@ async fn show_configs(
 async fn new_config(
     auth: BearerAuth,
     pool: web::Data<MySqlPool>,
-    json: web::Json<NewUserConfig>,
+    json: web::Json<NewConfig>,
 ) -> Result<HttpResponse, Error> {
     let token = auth.token();
     let new_user_config = json
@@ -56,7 +57,7 @@ async fn new_config(
 
     web::block(move || {
         let mut conn = pool.get()?;
-        UserConfig::insert_new_user_config(&mut conn, new_user_config)
+        Config::insert_new_user_config(&mut conn, new_user_config)
     })
     .await?
     .map_err(actix_web::error::ErrorInternalServerError)?;
@@ -74,12 +75,36 @@ async fn get_config(
     let id = path.into_inner();
 
     if (1..crate::models::config::MAX_SHARED_CONFIG_ID).contains(&id) {
-        // TODO: SHARED CONFIG
-        Ok(HttpResponse::InternalServerError().finish())
+        let mpool = pool.clone();
+        match web::block(move || {
+            let mut conn = mpool.get()?;
+            Config::get_shared_config_by_id(&mut conn, id)
+        })
+        .await?
+        .map_err(actix_web::error::ErrorInternalServerError)?
+        {
+            Some(config) => {
+                // check personnal user config
+                match web::block(move || {
+                    let mut conn = pool.get()?;
+                    UserConfig::get_user_config_by_config_id_and_user(&mut conn, id, &token)
+                })
+                .await?
+                .map_err(actix_web::error::ErrorInternalServerError)?
+                {
+                    Some(config) => {
+                        // TODO: merge personnal user config
+                        Ok(HttpResponse::Ok().json(config))
+                    },
+                    None => Ok(HttpResponse::Ok().json(config)),  // return config without merging personnal user config
+                }
+            }, 
+            None => Ok(HttpResponse::Unauthorized().finish()),
+        }
     } else {
         match web::block(move || {
             let mut conn = pool.get()?;
-            UserConfig::get_config_by_id_and_user(&mut conn, id, &token)
+            Config::get_config_by_id_and_user(&mut conn, id, &token)
         })
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?
@@ -95,7 +120,7 @@ async fn update_config(
     auth: BearerAuth,
     pool: web::Data<MySqlPool>,
     path: web::Path<i32>,
-    json: web::Json<UpdateUserConfig>,
+    json: web::Json<UpdateConfig>,
 ) -> Result<HttpResponse, Error> {
     let token = String::from(auth.token());
     let id = path.into_inner();
@@ -111,7 +136,7 @@ async fn update_config(
         let p = pool.clone();
         let config = web::block(move || {
             let mut conn = p.get()?;
-            UserConfig::get_config_by_id_and_user(&mut conn, id, &t)
+            Config::get_config_by_id_and_user(&mut conn, id, &t)
         })
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?;
@@ -124,7 +149,7 @@ async fn update_config(
         web::block(move || {
             // update config content
             let mut conn = pool.get()?;
-            UserConfig::update_user_config_content(&mut conn, config, &updated_config.content)
+            Config::update_user_config_content(&mut conn, config, &updated_config.content)
         })
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?;
