@@ -4,6 +4,7 @@ use diesel::{Queryable, Insertable, Identifiable, MysqlConnection, QueryDsl, Run
 use chrono::{NaiveDateTime, Utc};
 
 use super::DbError;
+use super::user_config::UserConfig;
 
 pub const MAX_SHARED_CONFIG_ID: i32 = 999;
 
@@ -61,6 +62,22 @@ impl Config {
         Ok(all_configs.filter(id.eq(config_id).and(user.nullable().eq(user_id))).first::<Config>(conn).optional()?)
     }
 
+    pub fn get_user_shared_config_by_id(conn: &mut MysqlConnection, id: i32, user_id: &str) -> Result<Option<Config>, DbError> {
+
+        let config = Config::get_shared_config_by_id(conn, id)?;
+
+        if config.is_none() {
+            return Ok(config);
+        } else if let Some(user_config) = UserConfig::get_user_config_by_config_id_and_user(conn, id, user_id)? {
+                let mut config = config.unwrap();
+                config.merge(user_config)?;
+                return Ok(Some(config));
+        }else {
+            return Ok(config);
+        }
+
+    }
+
     pub fn get_shared_config_by_id(conn: &mut MysqlConnection, config_id: i32) -> Result<Option<Config>, DbError> {
 
         use crate::schema::configs::dsl::*;
@@ -79,6 +96,12 @@ impl Config {
 
         Ok(())
     }
+
+    pub fn merge(&mut self, _user_config: UserConfig) -> Result<(), DbError> {
+        // TODO: MERGE PROFILES
+        Ok(())
+    }
+
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Identifiable, Queryable, Insertable, AsChangeset)]

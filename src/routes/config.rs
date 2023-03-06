@@ -3,7 +3,6 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::debug;
 
 use crate::app_config::MappedAppConfig;
-use crate::models::user_config::UserConfig;
 use crate::storage::MySqlPool;
 
 use crate::models::config::{NewConfig, UpdateConfig, Config};
@@ -74,45 +73,21 @@ async fn get_config(
     let token = String::from(auth.token());
     let id = path.into_inner();
 
-    if (1..crate::models::config::MAX_SHARED_CONFIG_ID).contains(&id) {
-        let mpool = pool.clone();
-        match web::block(move || {
-            let mut conn = mpool.get()?;
-            Config::get_shared_config_by_id(&mut conn, id)
-        })
-        .await?
-        .map_err(actix_web::error::ErrorInternalServerError)?
-        {
-            Some(config) => {
-                // check personnal user config
-                match web::block(move || {
-                    let mut conn = pool.get()?;
-                    UserConfig::get_user_config_by_config_id_and_user(&mut conn, id, &token)
-                })
-                .await?
-                .map_err(actix_web::error::ErrorInternalServerError)?
-                {
-                    Some(config) => {
-                        // TODO: merge personnal user config
-                        Ok(HttpResponse::Ok().json(config))
-                    },
-                    None => Ok(HttpResponse::Ok().json(config)),  // return config without merging personnal user config
-                }
-            }, 
-            None => Ok(HttpResponse::Unauthorized().finish()),
-        }
-    } else {
-        match web::block(move || {
-            let mut conn = pool.get()?;
+    match web::block(move || {
+        let mut conn = pool.get()?;
+        if (1..crate::models::config::MAX_SHARED_CONFIG_ID).contains(&id) { // SHARED CONFIG
+            Config::get_user_shared_config_by_id(&mut conn, id, &token)
+        } else { // USER CONFIG
             Config::get_config_by_id_and_user(&mut conn, id, &token)
-        })
-        .await?
-        .map_err(actix_web::error::ErrorInternalServerError)?
-        {
-            Some(config) => Ok(HttpResponse::Ok().json(config)), // TODO: remove user from config
-            None => Ok(HttpResponse::Unauthorized().finish()),
         }
+    })
+    .await?
+    .map_err(actix_web::error::ErrorInternalServerError)?
+    {
+        Some(config) => Ok(HttpResponse::Ok().json(config)), // TODO: remove user from config
+        None => Ok(HttpResponse::Unauthorized().finish()),
     }
+
 }
 
 #[patch("/configs/{id}")]
