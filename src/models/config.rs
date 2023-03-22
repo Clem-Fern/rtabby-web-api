@@ -30,13 +30,11 @@ pub struct Config {
 
 impl Config {
 
-    pub fn get_all_config_by_user(conn: &mut MysqlConnection, user_id: &str) -> Result<Vec<Config>, DbError> {
+    pub fn get_all_config_by_user(conn: &mut MysqlConnection, user_id: &str) -> Result<Vec<ConfigWithoutUserAndContent>, DbError> {
 
         use crate::schema::configs::dsl::*;
 
-        let list = configs.filter(user.eq(user_id)).load::<Config>(conn)?;
-
-        Ok(list)
+        Ok(all_configs.select((id, name, created_at, modified_at)).filter(user.eq(user_id)).load::<ConfigWithoutUserAndContent>(conn)?)
     }
     
     pub fn insert_new_user_config(conn: &mut MysqlConnection, new_config: NewConfigWithUser) -> Result<(), DbError> {
@@ -64,17 +62,17 @@ impl Config {
 
     pub fn get_user_shared_config_by_id(conn: &mut MysqlConnection, id: i32, user_id: &str) -> Result<Option<Config>, DbError> {
 
-        let config = Config::get_shared_config_by_id(conn, id)?;
-
-        if config.is_none() {
-            return Ok(config);
-        } else if let Some(user_config) = UserConfig::get_user_config_by_config_id_and_user(conn, id, user_id)? {
-                let mut config = config.unwrap();
+        if let Some(config) = Config::get_shared_config_by_id(conn, id)? {
+            if let Some(user_config) = UserConfig::get_user_config_by_config_id_and_user(conn, id, user_id)? {
+                let mut config = config;
                 config.merge(user_config)?;
-                return Ok(Some(config));
-        }else {
-            return Ok(config);
-        }
+                Ok(Some(config))
+            }else {
+                Ok(Some(config))
+            }
+        } else {
+            Ok(None)
+        } 
 
     }
 
@@ -83,6 +81,13 @@ impl Config {
         use crate::schema::configs::dsl::*;
 
         Ok(all_configs.filter(id.eq(config_id).and(user.is_null())).first::<Config>(conn).optional()?)
+    }
+
+    pub fn get_shared_config_without_content_by_id(conn: &mut MysqlConnection, config_id: i32) -> Result<Option<ConfigWithoutUserAndContent>, DbError> {
+
+        use crate::schema::configs::dsl::*;
+
+        Ok(all_configs.select((id, name, created_at, modified_at)).filter(id.eq(config_id).and(user.is_null())).first::<ConfigWithoutUserAndContent>(conn).optional()?)
     }
 
     pub fn update_user_config_content(conn: &mut MysqlConnection, config: Config, new_content: &str) -> Result<(), DbError> {
@@ -102,6 +107,17 @@ impl Config {
         Ok(())
     }
 
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Identifiable, Queryable)]
+#[diesel(table_name = configs)]
+#[diesel(primary_key(id))]
+pub struct ConfigWithoutUserAndContent {
+    pub id: i32,
+    pub name: String,
+    
+    pub created_at: NaiveDateTime,
+    pub modified_at: NaiveDateTime,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Identifiable, Queryable, Insertable, AsChangeset)]

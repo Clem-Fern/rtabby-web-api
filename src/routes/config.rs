@@ -1,6 +1,5 @@
 use actix_web::{get, patch, post, web, Error, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use log::debug;
 
 use crate::app_config::MappedAppConfig;
 use crate::storage::MySqlPool;
@@ -27,11 +26,10 @@ async fn show_configs(
     for shared_config in &app_config.users.get(&token).unwrap().shared_configs {
         let mpool = pool.clone();
         let id = shared_config.to_owned();
-        debug!("shared config {}", id);
 
         let config = web::block(move || {
             let mut conn = mpool.get()?;
-            Config::get_shared_config_by_id(&mut conn, id)
+            Config::get_shared_config_without_content_by_id(&mut conn, id)
         })
         .await?
         .map_err(actix_web::error::ErrorInternalServerError)?

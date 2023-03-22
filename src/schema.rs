@@ -5,7 +5,7 @@ diesel::table! {
         id -> Integer,
         name -> Varchar,
         user -> Nullable<Varchar>,
-        content -> Text,
+        content -> Mediumtext,
         created_at -> Datetime,
         modified_at -> Datetime,
     }
@@ -15,7 +15,7 @@ diesel::table! {
     user_configs (config_id, user) {
         config_id -> Integer,
         user -> Varchar,
-        content -> Text,
+        content -> Mediumtext,
     }
 }
 
