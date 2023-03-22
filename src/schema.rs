@@ -12,15 +12,14 @@ diesel::table! {
 }
 
 diesel::table! {
-    user_configs (config, user) {
-        config -> Integer,
+    user_configs (config_id, user) {
+        config_id -> Integer,
         user -> Varchar,
-        name -> Varchar,
         content -> Text,
     }
 }
 
-diesel::joinable!(user_configs -> configs (config));
+diesel::joinable!(user_configs -> configs (config_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     configs,

@@ -8,9 +8,8 @@ CREATE TABLE configs (
 ) AUTO_INCREMENT = 1000;
 
 CREATE TABLE user_configs (
-    config INTEGER NULL REFERENCES configs(id) ON UPDATE RESTRICT ON DELETE RESTRICT,
-    user VARCHAR(255) NULL,
-    name VARCHAR(255) NOT NULL,
+    config_id INTEGER NULL REFERENCES configs(id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    user VARCHAR(255) NOT NULL,
     content TEXT NOT NULL DEFAULT '',
-    PRIMARY KEY (config, user)
-) AUTO_INCREMENT = 1000;
+    PRIMARY KEY (config_id, user)
+);

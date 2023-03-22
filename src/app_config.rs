@@ -1,13 +1,13 @@
 use log::warn;
 use serde::{Deserialize};
-use crate::models::{user::{User, UserWithoutToken}, config::{UserConfigWithoutDate, NewUserConfig}};
+use crate::models::{user::{User, UserWithoutToken}, config::{ConfigWithoutDate, NewConfig}};
 use crate::error::ConfigError;
 use std::collections::{HashMap, hash_map::Entry};
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfig {
     pub users: Vec<User>,
-    pub shared_configs: Vec<UserConfigWithoutDate>,
+    pub shared_configs: Vec<ConfigWithoutDate>,
 }
 
 pub fn load_file(file: &str) -> Result<AppConfig, ConfigError> {
@@ -18,7 +18,7 @@ pub fn load_file(file: &str) -> Result<AppConfig, ConfigError> {
 #[derive(Clone, Debug, Default)]
 pub struct MappedAppConfig {
     pub users: HashMap<String, UserWithoutToken>,
-    pub shared_configs: HashMap<i32, NewUserConfig>,
+    pub shared_configs: HashMap<i32, NewConfig>,
 }
 
 impl From<AppConfig> for MappedAppConfig {
@@ -32,11 +32,11 @@ impl From<AppConfig> for MappedAppConfig {
             }
         }
 
-        let mut configs_map : HashMap<i32, NewUserConfig> = HashMap::new();
+        let mut configs_map : HashMap<i32, NewConfig> = HashMap::new();
         for config in config.shared_configs {
             if (1..crate::models::config::MAX_SHARED_CONFIG_ID).contains(&config.id) {
                 if let Entry::Vacant(e) = configs_map.entry(config.id) {
-                    e.insert(NewUserConfig { name: config.name});
+                    e.insert(NewConfig { name: config.name});
                 } else {
                     warn!("Config : Skipping config {}, which is not unique in the configuration", &config.id);
                 }
