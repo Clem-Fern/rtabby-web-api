@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // INITIALIZE LOGGING
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(
         if cfg!(debug_assertions) {
-            "trace"
+            "debug"
         } else {
             "info"
         },

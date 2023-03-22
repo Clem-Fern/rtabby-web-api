@@ -33,7 +33,7 @@ impl Storage {
     }
 
     pub fn init(&self, app_config: MappedAppConfig) -> Result<(), error::StorageInitializationError> {
-        let mut conn = establish_connection(self.url().as_str());
+        let mut conn = establish_connection(self.url().as_str())?;
 
         run_migrations(&mut conn)?; // RUN PENDING MIGRATIONS
 
@@ -68,6 +68,6 @@ fn run_migrations(
     Ok(())
 }
 
-pub fn establish_connection(url: &str) -> MysqlConnection {
-    MysqlConnection::establish(url).unwrap_or_else(|_| panic!("Error connecting to {url}"))
+pub fn establish_connection(url: &str) -> Result<MysqlConnection, diesel::ConnectionError> {
+    MysqlConnection::establish(url)
 }

@@ -9,7 +9,8 @@ use crate::models::DbError;
 pub enum StorageInitializationError {
     Migration(Box<dyn error::Error + Send + Sync + 'static>),
     R2d2(r2d2::PoolError),
-    Db(DbError)
+    Db(DbError),
+    MysqlConnection(diesel::ConnectionError)
 }
 
 impl error::Error for StorageInitializationError {}
@@ -20,6 +21,7 @@ impl fmt::Display for StorageInitializationError {
             Self::Migration(ref err) => write!(f, "Failed to initialize databse storage (diesel migrations): {err}"),
             Self::R2d2(ref err) => write!(f, "Failed to initialize database storage (r2d2 pool manager): {err}"),
             Self::Db(ref err) => write!(f, "Encountered error on database query: {err}"),
+            Self::MysqlConnection(ref err) => write!(f, "Encountered error on database connection: {err}"),
         }
     }
 }
@@ -33,6 +35,12 @@ impl From<Box<dyn error::Error + Send + Sync + 'static>> for StorageInitializati
 impl From<r2d2::PoolError> for StorageInitializationError {
     fn from(err: r2d2::PoolError) -> StorageInitializationError {
         StorageInitializationError::R2d2(err)
+    }
+}
+
+impl From<diesel::ConnectionError> for StorageInitializationError {
+    fn from(err: diesel::ConnectionError) -> StorageInitializationError {
+        StorageInitializationError::MysqlConnection(err)
     }
 }
 
