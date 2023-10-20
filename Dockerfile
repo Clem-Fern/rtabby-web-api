@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM rust:1.66-alpine as builder
+FROM rust:1.73-alpine AS builder
 WORKDIR /build
 COPY . .
 RUN apk add --no-cache build-base binutils mariadb-dev musl-dev bash cmake curl && \
@@ -16,7 +16,7 @@ FROM scratch
 
 WORKDIR /config
 
-COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/tabby-light-settings-sync /
+COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/rtabby-web-api /
 COPY --from=builder /build/users.exemple.yml .
 
-CMD ["/tabby-light-settings-sync"]
+CMD ["/rtabby-web-api"]
