@@ -8,7 +8,5 @@
 
 TODO: ENV VAR TO CLEAR DATABASE ON STARTUP
 
-TODO: FIX SHARED CONFIG ID in users.yml
-
 https://github.com/Eugeny/tabby/blob/master/tabby-settings/src/services/configSync.service.ts
 https://github.com/Eugeny/tabby-web/blob/4dab0c1dbf489c1ec1757822ac25ebd699ccd171/backend/tabby/app/models.py#L7

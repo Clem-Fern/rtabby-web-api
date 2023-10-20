@@ -9,6 +9,7 @@ use crate::models::DbError;
 pub enum StorageInitializationError {
     Migration(Box<dyn error::Error + Send + Sync + 'static>),
     R2d2(r2d2::PoolError),
+    #[allow(dead_code)]
     Db(DbError),
     MysqlConnection(diesel::ConnectionError)
 }

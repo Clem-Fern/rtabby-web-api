@@ -1,16 +1,21 @@
-use actix_web::{web, HttpResponse, get, put};
+use actix_web::{get, web, Error, HttpResponse};
+use actix_web_httpauth::extractors::bearer::BearerAuth;
+
+use crate::app_config::MappedAppConfig;
 
 #[get("/user")]
-async fn get_user() -> HttpResponse {
-    HttpResponse::Ok().body("Show users")
-}
+async fn get_user(
+    auth: BearerAuth,
+    app_config: web::Data<MappedAppConfig>,
+) -> Result<HttpResponse, Error> {
+    let token = String::from(auth.token());
 
-#[put("/user")]
-async fn update_user() -> HttpResponse {
-    HttpResponse::Ok().body("Show users")
+    match app_config.users.get(&token) {
+        Some(user) => Ok(HttpResponse::Ok().json(user)),
+        None => Ok(HttpResponse::Unauthorized().finish()),
+    }
 }
 
 pub fn user_route_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(get_user)
-    .service(update_user);
+    cfg.service(get_user);
 }

@@ -3,25 +3,12 @@
 diesel::table! {
     configs (id) {
         id -> Integer,
+        #[max_length = 255]
         name -> Varchar,
+        #[max_length = 255]
         user -> Nullable<Varchar>,
         content -> Mediumtext,
         created_at -> Datetime,
         modified_at -> Datetime,
     }
 }
-
-diesel::table! {
-    user_configs (config_id, user) {
-        config_id -> Integer,
-        user -> Varchar,
-        content -> Mediumtext,
-    }
-}
-
-diesel::joinable!(user_configs -> configs (config_id));
-
-diesel::allow_tables_to_appear_in_same_query!(
-    configs,
-    user_configs,
-);

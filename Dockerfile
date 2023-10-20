@@ -3,8 +3,8 @@ FROM rust:1.66-alpine as builder
 WORKDIR /build
 COPY . .
 RUN apk add --no-cache build-base binutils mariadb-dev musl-dev bash cmake curl && \
-    bash mariadb-static-build.sh && \ 
-    bash zlib-static-build.sh && \
+    bash scripts/mariadb-static-build.sh && \ 
+    bash scripts/zlib-static-build.sh && \
     ar x lib/libmysqlclient.a && \
     ar x /lib/libz.a && \
     ar x /usr/lib/libc.a && \

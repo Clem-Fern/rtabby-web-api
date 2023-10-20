@@ -58,11 +58,11 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
     let config: AppConfig = app_config::load_file(&config_file_name)?;
     let config: MappedAppConfig = config.into();
 
-    info!("{} loaded => {} users found, {} shared configs found", config_file_name, config.users.len(), config.shared_configs.len());
+    info!("{} loaded => {} users found", config_file_name, config.users.len());
 
     // INIT DATABASE STORAGE
     let storage: Storage = Storage::new();
-    storage.init(config.clone())?;
+    storage.init()?;
     
     // TODO : storage clean up on start
 
@@ -97,7 +97,7 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
             .build()?;
 
         info!("Binding HTTPS Listener on {bind_addr}:{bind_port}");
-        server = server.bind_rustls(format!("{bind_addr}:{bind_port}"), config)?;
+        server = server.bind_rustls_021(format!("{bind_addr}:{bind_port}"), config)?;
     } else {
         info!("Binding HTTP Listener on {bind_addr}:{bind_port}");
         server = server.bind(format!("{bind_addr}:{bind_port}"))?;

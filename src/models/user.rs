@@ -1,35 +1,22 @@
-use serde::{de, Deserialize};
+use serde::{de, Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct User {
-    #[serde(deserialize_with = "uuid_validator")]
-    pub token: String,
-    #[serde(default)]
-    pub shared_configs: Vec<i32>,
-}
-
-#[derive(Clone, Debug, Deserialize)]
-pub struct UserWithoutSharedConfig {
+    pub name: String,
     #[serde(deserialize_with = "uuid_validator")]
     pub token: String,
 }
 
-impl From<User> for UserWithoutSharedConfig {
-    fn from(user: User) -> Self {
-        UserWithoutSharedConfig { token: user.token }
-    }
-}
-
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct UserWithoutToken {
-    pub shared_configs: Vec<i32>,
+    pub name: String,
 }
 
 impl From<User> for UserWithoutToken {
     fn from(user: User) -> Self {
         UserWithoutToken {
-            shared_configs: user.shared_configs,
+            name: user.name,
         }
     }
 }

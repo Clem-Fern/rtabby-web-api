@@ -1,8 +1,8 @@
 services:
-  tlss:
-    container_name: tlss
+  rtabby:
+    container_name: rtabby-web-api
     build: .
-    #image: tabby-light-settings-sync
+    #image: rtabby-web-api
     ports:
       - "8080:8080"
     environment:
@@ -13,7 +13,7 @@ services:
       db:
         condition: 'service_healthy'
   db:
-    container_name: tlss-database
+    container_name: rtabby-database
     image: mariadb:latest
     volumes:
       - database:/var/lib/mysql

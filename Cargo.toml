@@ -1,5 +1,5 @@
 [package]
-name = "tabby-light-settings-sync"
+name = "rtabby-web-api"
 version = "0.1.0"
 edition = "2021"
 
@@ -14,9 +14,9 @@ dotenvy = "0.15.6"
 env_logger = "0.10.0"
 log = "0.4.16"
 dotenvy = {version = "0.15.6", optional = true}
-rustls = "0.20.7"
+rustls = "0.21.7"
 rustls-pemfile = "1.0.0"
-actix-web = { version = "4.2.1", features = ["rustls"] }
+actix-web = { version = "4.2.1", features = ["rustls-0_21"]  }
 actix-web-httpauth = "0.8.0"
 chrono = { version = "0.4.22", features = ["serde"] }
 diesel = { version = "2.0.2", features = ["mysql", "chrono", "r2d2"] }
