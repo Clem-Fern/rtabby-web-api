@@ -99,6 +99,7 @@ To run your own instance with docker compose.
     |BIND_PORT|Port listening on (Optional)|8989|8080|
     |SSL_CERTIFICATE|Server certificate (Optional)|cert.pem|None|
     |SSL_CERTIFICATE_KEY|Server certificate private key(Optional)|private.key|None|    
+    |CLEANUP_USERS|Delete configurations own by unknown user (Be careful)(Optional)|true|false|  
 
 ## Usage
 
