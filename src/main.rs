@@ -55,6 +55,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
 async fn run_app() -> Result<(), Box<dyn Error>> {
     // LOAD CONFIG FILE
     let config_file_name = env::var(env::ENV_CONFIG_FILE).unwrap_or(String::from("users.yml"));
+
+    // Check if the config file already exist, else create one and exit
+    app_config::create_config_file_if_not_exist(&config_file_name)?;
+
     let config: AppConfig = app_config::load_file(&config_file_name)?;
     let config: MappedAppConfig = config.into();
 

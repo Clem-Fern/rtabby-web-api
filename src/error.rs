@@ -80,6 +80,7 @@ pub enum ConfigError {
     Yaml(serde_yaml::Error),
     #[allow(dead_code)]
     DuplicatedEntry(String),
+    NoConfig(String),
 }
 
 impl error::Error for ConfigError {}
@@ -90,6 +91,7 @@ impl fmt::Display for ConfigError {
             Self::Io(ref err) => write!(f, "Encountered IO error while building deserializing configuration: {err}"),
             Self::Yaml(ref err) => write!(f, "Encountered Yaml error while building deserializing configuration: {err}"),
             Self::DuplicatedEntry(ref entry) => write!(f, "The following data is not unique in configuration: {entry}"),
+            Self::NoConfig(ref entry) => write!(f, "{entry} configuration not found. The file has beeen created from template. Edit {entry} to add your own users.")
         }
     }
 }
