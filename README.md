@@ -27,34 +27,40 @@ To run your own instance with docker compose.
 
 ### Installation
 
-* From source
-    ```sh
-    git clone https://github.com/Clem-Fern/rtabby-web-api
-    ```
-
-* Using rtabby-web-api image from Github Docker Repository
+* Using rtabby-web-api image from Github Docker Repository **(recommended)**
   ```sh
-  docker pull ghcr.io/clem-fern/rtabby-web-api
   mkdir -p rtabby-web-api/config
   cd rtabby-web-api
   wget https://raw.githubusercontent.com/Clem-Fern/rtabby-web-api/master/docker-compose.yml
   ```
-  Edit `docker-compose.yml` to use the image you have pulled before
-  ```yaml
-  # Comment build line
-  #build: .
-  # Uncomment image
-  image: rtabby-web-api
+
+* From source
+  ```sh
+  git clone https://github.com/Clem-Fern/rtabby-web-api
+  cd rtabby-web-api
   ```
+  
+  Edit `docker-compose.yml` to use local context build instead of the published image
+  ```yaml
+  # Uncomment build line
+  build: .
+  # Comment image
+  # image: rtabby-web-api
+  ```
+
 
 ### Configuration
 
 1. Create `config` directory. It will be used to store your config and certificate(not mandatory)
 
     ```sh
-    cd rtabby-web-api
+    # pwd
+    # ./rtabby-web-api
     mkdir config
-    cp users.exemple.yml config/users.yml
+
+    # Only from source installation and optional
+    # users.yml file will be created at first start 
+    # cp users.exemple.yml config/users.yml
     ```
 
 2. Add some user into `users.yml`.
@@ -76,7 +82,8 @@ To run your own instance with docker compose.
             - "8080:8080"
           environment:
             - DATABASE_URL=mysql://tabby:tabby@db/tabby
-            - 
+            - SSL_CERTIFICATE=cert.pem
+            - SSL_CERTIFICATE_KEY=cert.key
           volumes:
             - ./config:/config
     ```
