@@ -1,6 +1,6 @@
 extern crate env_logger;
 extern crate log;
-use log::{info, error};
+use log::{info, error, warn};
 
 use std::error::Error;
 
@@ -68,7 +68,12 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
     let storage: Storage = Storage::new();
     storage.init()?;
     
-    // TODO : storage clean up on start
+    // storage clean up on start
+    if env::var(env::ENV_CLEANUP_USERS).unwrap_or(String::from("false")).to_lowercase().parse().unwrap_or(false) {
+        warn!("Cleaning up old user configurations from storage.");
+        storage.cleanup(&config)?;
+    }
+
 
     let pool = storage.pool()?;
 

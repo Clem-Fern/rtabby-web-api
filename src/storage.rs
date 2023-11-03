@@ -8,6 +8,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use log::info;
 use diesel::r2d2::{Pool, ConnectionManager};
 
+use crate::app_config::MappedAppConfig;
 use crate::env;
 use crate::error;
 
@@ -34,6 +35,16 @@ impl Storage {
         let mut conn = establish_connection(self.url().as_str())?;
 
         run_migrations(&mut conn)?; // RUN PENDING MIGRATIONS
+
+        Ok(())
+    }
+
+    pub fn cleanup(&self, app_config: &MappedAppConfig) -> Result<(), error::StorageError> {
+        let mut conn = establish_connection(self.url().as_str())?;
+
+        use crate::schema::configs::dsl::*;
+
+        diesel::delete(configs.filter(user.ne_all(app_config.users.keys()))).execute(&mut conn)?;
 
         Ok(())
     }

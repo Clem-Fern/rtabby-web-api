@@ -45,6 +45,12 @@ impl From<diesel::ConnectionError> for StorageError {
     }
 }
 
+impl From<diesel::result::Error> for StorageError {
+    fn from(err: diesel::result::Error) -> StorageError {
+        StorageError::Db(Box::new(err))
+    }
+}
+
 #[derive(Debug)]
 pub enum TlsError {
     Io(io::Error),
