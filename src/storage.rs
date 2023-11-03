@@ -30,7 +30,7 @@ impl Storage {
         &self.url
     }
 
-    pub fn init(&self) -> Result<(), error::StorageInitializationError> {
+    pub fn init(&self) -> Result<(), error::StorageError> {
         let mut conn = establish_connection(self.url().as_str())?;
 
         run_migrations(&mut conn)?; // RUN PENDING MIGRATIONS
@@ -38,7 +38,7 @@ impl Storage {
         Ok(())
     }
 
-    pub fn pool(&self) -> Result<MySqlPool, error::StorageInitializationError> {
+    pub fn pool(&self) -> Result<MySqlPool, error::StorageError> {
         let pool = Pool::new(ConnectionManager::new(self.url().clone()))?;
         Ok(pool)
     }
