@@ -114,4 +114,10 @@ To run your own instance with docker compose.
 
 ## Contributing
 
+Build dependencies:
+  * Docker 
+  * libmysqlclient for the Mysql backend (diesel depend on this)
+  * Rust 1.65 or later
+  * Diesel-rs to interact with migrations and schemas
+
 Feel free to fork, request some features, submit issue or PR. Even give me some tips if you want, to help improve my code and knowledge in Rust ;)
