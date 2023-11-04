@@ -8,6 +8,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use log::info;
 use diesel::r2d2::{Pool, ConnectionManager};
 
+use crate::app_config::MappedAppConfig;
 use crate::env;
 use crate::error;
 
@@ -30,7 +31,7 @@ impl Storage {
         &self.url
     }
 
-    pub fn init(&self) -> Result<(), error::StorageInitializationError> {
+    pub fn init(&self) -> Result<(), error::StorageError> {
         let mut conn = establish_connection(self.url().as_str())?;
 
         run_migrations(&mut conn)?; // RUN PENDING MIGRATIONS
@@ -38,7 +39,17 @@ impl Storage {
         Ok(())
     }
 
-    pub fn pool(&self) -> Result<MySqlPool, error::StorageInitializationError> {
+    pub fn cleanup(&self, app_config: &MappedAppConfig) -> Result<(), error::StorageError> {
+        let mut conn = establish_connection(self.url().as_str())?;
+
+        use crate::schema::configs::dsl::*;
+
+        diesel::delete(configs.filter(user.ne_all(app_config.users.keys()))).execute(&mut conn)?;
+
+        Ok(())
+    }
+
+    pub fn pool(&self) -> Result<MySqlPool, error::StorageError> {
         let pool = Pool::new(ConnectionManager::new(self.url().clone()))?;
         Ok(pool)
     }

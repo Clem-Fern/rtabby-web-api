@@ -6,6 +6,7 @@ pub const ENV_BIND_ADDR: &str = "BIND_ADDR";
 pub const ENV_BIND_PORT: &str = "BIND_PORT";
 pub const ENV_SSL_CERTIFICATE: &str = "SSL_CERTIFICATE";
 pub const ENV_SSL_CERTIFICATE_KEY: &str = "SSL_CERTIFICATE_KEY";
+pub const ENV_CLEANUP_USERS: &str = "CLEANUP_USERS";
 
 pub const ENV_DATABASE_URL: &str = "DATABASE_URL";
 

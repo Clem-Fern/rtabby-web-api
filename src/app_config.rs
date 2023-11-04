@@ -3,6 +3,9 @@ use serde::Deserialize;
 use crate::models::user::{User, UserWithoutToken};
 use crate::error::ConfigError;
 use std::collections::HashMap;
+use std::fs::File;
+use std::path::Path;
+use std::io::Write;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfig {
@@ -12,6 +15,17 @@ pub struct AppConfig {
 pub fn load_file(file: &str) -> Result<AppConfig, ConfigError> {
     let config_file = std::fs::File::open(file).map_err(ConfigError::Io)?;
     serde_yaml::from_reader(config_file).map_err(ConfigError::Yaml)
+}
+
+pub fn create_config_file_if_not_exist(file: &str) -> Result<(), ConfigError> {
+    let path = Path::new(file);
+    if path.exists() {
+        Ok(())
+    } else {
+        let mut config = File::create(path)?;
+        write!(config, include_str!("../users.exemple.yml"))?;
+        Err(ConfigError::NoConfig(String::from(file)))
+    }
 }
 
 #[derive(Clone, Debug, Default)]
