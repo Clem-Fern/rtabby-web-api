@@ -1,20 +1,42 @@
 services:
   rtabby:
     container_name: rtabby-web-api
-    build: .
-    #image: rtabby-web-api
+    #build: .
+    image: ghcr.io/clem-fern/rtabby-web-api
+
+    # If running as root, setup your user/volume owner UID and GID
+    #user: "1000:1000"
+
+    cap_add:		
+      - "CAP_DAC_OVERRIDE"
+    cap_drop: ['ALL']
+    read_only: true
+
     ports:
       - "8080:8080"
     environment:
       - DATABASE_URL=mysql://tabby:tabby@db/tabby
     volumes:
       - ./config:/config
+    networks:
+      - frontend
+      - default
     depends_on:
       db:
         condition: 'service_healthy'
   db:
     container_name: rtabby-database
     image: mariadb:latest
+    cap_add:		
+      - "CAP_CHOWN"
+      - "CAP_DAC_OVERRIDE"
+      - "CAP_SETGID"
+      - "CAP_SETUID"
+    cap_drop: ['ALL']
+    read_only: true
+    tmpfs:
+      - /run/mysqld/
+      - /tmp
     volumes:
       - database:/var/lib/mysql
     environment:
@@ -31,3 +53,9 @@ services:
       start_period: 6s
 volumes:
   database:
+networks:
+  default:
+    name: rtabby_net_backend
+    internal: true
+  frontend:
+    name: rtabby_net_frontend
