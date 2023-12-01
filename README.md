@@ -94,6 +94,7 @@ To run your own instance with docker compose.
 
     | ENV VAR | DESCRIPTION | EXAMPLE | DEFAULT |
     |---------|-------------|---------|---------|
+    |DATABASE_URL|Url to database|mysql://tabby:tabby@db/tabby|-|
     |CONFIG_FILE|Url to configuration file (Optional)|my_config.yml|users.yml|
     |BIND_ADDR|Address listening on (Optional)|0.0.0.0|0.0.0.0|
     |BIND_PORT|Port listening on (Optional)|8989|8080|
