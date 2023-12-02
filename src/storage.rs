@@ -14,7 +14,7 @@ use crate::error;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
-pub type MySqlPool = Pool<ConnectionManager<MysqlConnection>>;
+pub type DbPool = Pool<ConnectionManager<MysqlConnection>>;
 
 #[derive(Clone)]
 pub struct Storage {
@@ -49,7 +49,7 @@ impl Storage {
         Ok(())
     }
 
-    pub fn pool(&self) -> Result<MySqlPool, error::StorageError> {
+    pub fn pool(&self) -> Result<DbPool, error::StorageError> {
         let pool = Pool::new(ConnectionManager::new(self.url().clone()))?;
         Ok(pool)
     }
