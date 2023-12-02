@@ -11,7 +11,7 @@ pub enum StorageError {
     R2d2(r2d2::PoolError),
     #[allow(dead_code)]
     Db(DbError),
-    MysqlConnection(diesel::ConnectionError)
+    DbConnection(diesel::ConnectionError)
 }
 
 impl error::Error for StorageError {}
@@ -22,7 +22,7 @@ impl fmt::Display for StorageError {
             Self::Migration(ref err) => write!(f, "Failed to initialize databse storage (diesel migrations): {err}"),
             Self::R2d2(ref err) => write!(f, "Failed to initialize database storage (r2d2 pool manager): {err}"),
             Self::Db(ref err) => write!(f, "Encountered error on database query: {err}"),
-            Self::MysqlConnection(ref err) => write!(f, "Encountered error on database connection: {err}"),
+            Self::DbConnection(ref err) => write!(f, "Encountered error on database connection: {err}"),
         }
     }
 }
@@ -41,7 +41,7 @@ impl From<r2d2::PoolError> for StorageError {
 
 impl From<diesel::ConnectionError> for StorageError {
     fn from(err: diesel::ConnectionError) -> StorageError {
-        StorageError::MysqlConnection(err)
+        StorageError::DbConnection(err)
     }
 }
 
