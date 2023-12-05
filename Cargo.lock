@@ -496,9 +496,11 @@ dependencies = [
  "byteorder",
  "chrono",
  "diesel_derives",
+ "libsqlite3-sys",
  "mysqlclient-sys",
  "percent-encoding",
  "r2d2",
+ "time",
  "url",
 ]
 
@@ -844,6 +846,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a08173bc88b7955d1b3145aa561539096c421ac8debde8cbc3612ec635fee29b"
 
 [[package]]
+name = "libsqlite3-sys"
+version = "0.26.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "afc22eff61b133b115c6e8c74e818c628d6d5e7a502afea6f64dee076dd94326"
+dependencies = [
+ "cc",
+ "pkg-config",
+ "vcpkg",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.4.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1152,11 +1165,13 @@ version = "0.2.0"
 dependencies = [
  "actix-web",
  "actix-web-httpauth",
+ "cfg-if",
  "chrono",
  "diesel",
  "diesel_migrations",
  "dotenvy",
  "env_logger",
+ "libsqlite3-sys",
  "log",
  "rustls",
  "rustls-pemfile",
