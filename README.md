@@ -21,7 +21,7 @@ As tabby web public instance app.tabby.sh has been discontinued. I decided to pu
 
 Run your own instance with docker compose.
 
-* Go to [Getting Started (Sqlite)]() to run rtabby-web-api using only one container with Sqlite.
+* Go to [Getting Started (Sqlite)](https://github.com/Clem-Fern/rtabby-web-api#getting-started-sqlite) to run rtabby-web-api using only one container with Sqlite.
 
 ### Prerequisites
 
@@ -194,7 +194,7 @@ Run your own instance with docker compose using only one container with Sqlite.
 
 ## Usage
 
-* Go to [Usage (Sqlite)]() to run rtabby-web-api using only one container with Sqlite.
+* Go to [Usage (Sqlite)](https://github.com/Clem-Fern/rtabby-web-api#usage-sqlite) to run rtabby-web-api using only one container with Sqlite.
 
 * To deploy
   ```sh
