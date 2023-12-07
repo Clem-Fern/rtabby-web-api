@@ -2,12 +2,14 @@ use chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::{Integer, VarChar};
 use diesel::{
     sql_query, AsChangeset, BoolExpressionMethods, ExpressionMethods, Identifiable, Insertable,
-    MysqlConnection, NullableExpressionMethods, OptionalExtension, QueryDsl, Queryable,
+    NullableExpressionMethods, OptionalExtension, QueryDsl, Queryable,
     RunQueryDsl,
 };
 use serde::{Deserialize, Serialize};
 
 use super::DbError;
+
+use crate::storage::DbConnection;
 
 use crate::schema::configs;
 use crate::schema::configs::dsl::configs as all_configs;
@@ -31,7 +33,7 @@ pub struct Config {
 
 impl Config {
     pub fn get_all_config_by_user(
-        conn: &mut MysqlConnection,
+        conn: &mut DbConnection,
         user_id: &str,
     ) -> Result<Vec<ConfigWithoutUserAndContent>, DbError> {
         use crate::schema::configs::dsl::*;
@@ -43,18 +45,30 @@ impl Config {
     }
 
     pub fn insert_new_user_config(
-        conn: &mut MysqlConnection,
+        conn: &mut DbConnection,
         new_config: NewConfigWithUser,
     ) -> Result<(), DbError> {
-        diesel::insert_into(all_configs)
-            .values(&new_config)
-            .execute(conn)?;
+
+        match conn {
+            #[cfg(feature = "mysql")]
+            DbConnection::Mysql(ref mut conn) => {
+                diesel::insert_into(all_configs)
+                .values(&new_config)
+                .execute(conn)?;
+            },
+            #[cfg(feature = "sqlite")]
+            DbConnection::Sqlite(ref mut conn) => {
+                diesel::insert_into(all_configs)
+                .values(&new_config)
+                .execute(conn)?;
+            }
+        }
 
         Ok(())
     }
 
     pub fn insert_new_user_config_or_update(
-        conn: &mut MysqlConnection,
+        conn: &mut DbConnection,
         config: ConfigWithoutDate,
     ) -> Result<(), DbError> {
         let query =
@@ -70,7 +84,7 @@ impl Config {
     }
 
     pub fn get_config_by_id_and_user(
-        conn: &mut MysqlConnection,
+        conn: &mut DbConnection,
         config_id: i32,
         user_id: &str,
     ) -> Result<Option<Config>, DbError> {
@@ -83,7 +97,7 @@ impl Config {
     }
 
     pub fn update_user_config_content(
-        conn: &mut MysqlConnection,
+        conn: &mut DbConnection,
         config: Config,
         new_content: &str,
     ) -> Result<(), DbError> {
@@ -99,7 +113,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn delete_config(conn: &mut MysqlConnection, config: Config) -> Result<(), DbError> {
+    pub fn delete_config(conn: &mut DbConnection, config: Config) -> Result<(), DbError> {
         diesel::delete(&config).execute(conn)?;
 
         Ok(())

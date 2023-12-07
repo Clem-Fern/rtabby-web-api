@@ -1,7 +1,12 @@
 extern crate diesel;
 use std::error::Error;
 
-use diesel::{prelude::*, mysql::Mysql};
+use diesel::prelude::*;
+#[cfg(feature = "mysql")]
+use diesel::mysql::Mysql;
+#[cfg(feature = "sqlite")]
+use diesel::sqlite::Sqlite;
+
 
 extern crate diesel_migrations;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
@@ -12,9 +17,22 @@ use crate::app_config::MappedAppConfig;
 use crate::env;
 use crate::error;
 
-const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
+#[cfg(feature = "mysql")]
+const MYSQL_MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
+#[cfg(feature = "sqlite")]
+const SQLITE_MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations_sqlite");
 
-pub type MySqlPool = Pool<ConnectionManager<MysqlConnection>>;
+#[derive(diesel::MultiConnection)]
+pub enum DbConnection {
+    #[cfg(feature = "mysql")]
+    Mysql(diesel::MysqlConnection),
+    #[cfg(feature = "sqlite")]
+    Sqlite(diesel::SqliteConnection),
+}
+
+pub type DbPool = Pool<ConnectionManager<DbConnection>>;
+
+
 
 #[derive(Clone)]
 pub struct Storage {
@@ -34,7 +52,17 @@ impl Storage {
     pub fn init(&self) -> Result<(), error::StorageError> {
         let mut conn = establish_connection(self.url().as_str())?;
 
-        run_migrations(&mut conn)?; // RUN PENDING MIGRATIONS
+        // RUN PENDING MIGRATIONS
+        match conn {
+            #[cfg(feature = "mysql")]
+            DbConnection::Mysql(ref mut conn) => {
+                run_mysql_migrations(conn)?;
+            },
+            #[cfg(feature = "sqlite")]
+            DbConnection::Sqlite(ref mut conn) => {
+                run_sqlite_migrations(conn)?;
+            }            
+        }
 
         Ok(())
     }
@@ -49,23 +77,37 @@ impl Storage {
         Ok(())
     }
 
-    pub fn pool(&self) -> Result<MySqlPool, error::StorageError> {
+    pub fn pool(&self) -> Result<DbPool, error::StorageError> {
         let pool = Pool::new(ConnectionManager::new(self.url().clone()))?;
+        
         Ok(pool)
     }
 }
 
-fn run_migrations(
+#[cfg(feature = "mysql")]
+fn run_mysql_migrations(
     connection: &mut impl MigrationHarness<Mysql>,
 ) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
-    if connection.has_pending_migration(MIGRATIONS)? {
+    if connection.has_pending_migration(MYSQL_MIGRATIONS)? {
         info!("Running pending migrations.");
-        connection.run_pending_migrations(MIGRATIONS)?;
+        connection.run_pending_migrations(MYSQL_MIGRATIONS)?;
     }
 
     Ok(())
 }
 
-pub fn establish_connection(url: &str) -> Result<MysqlConnection, diesel::ConnectionError> {
-    MysqlConnection::establish(url)
+#[cfg(feature = "sqlite")]
+fn run_sqlite_migrations(
+    connection: &mut impl MigrationHarness<Sqlite>,
+) -> Result<(), Box<dyn Error + Send + Sync + 'static>> {
+    if connection.has_pending_migration(SQLITE_MIGRATIONS)? {
+        info!("Running pending migrations.");
+        connection.run_pending_migrations(SQLITE_MIGRATIONS)?;
+    }
+
+    Ok(())
+}
+
+pub fn establish_connection(url: &str) -> Result<DbConnection, diesel::ConnectionError> {
+    DbConnection::establish(url)
 }

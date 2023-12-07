@@ -1,12 +1,12 @@
 use actix_web::{delete, get, patch, post, web, Error, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 
-use crate::storage::MySqlPool;
+use crate::storage::DbPool;
 
 use crate::models::config::{Config, NewConfig, UpdateConfig, ConfigWithoutUser};
 
 #[get("/configs")]
-async fn show_configs(auth: BearerAuth, pool: web::Data<MySqlPool>) -> Result<HttpResponse, Error> {
+async fn show_configs(auth: BearerAuth, pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
     let token = String::from(auth.token());
 
     let mtoken = token.clone();
@@ -24,7 +24,7 @@ async fn show_configs(auth: BearerAuth, pool: web::Data<MySqlPool>) -> Result<Ht
 #[post("/configs")] // create a new config
 async fn new_config(
     auth: BearerAuth,
-    pool: web::Data<MySqlPool>,
+    pool: web::Data<DbPool>,
     json: web::Json<NewConfig>,
 ) -> Result<HttpResponse, Error> {
     let token = auth.token();
@@ -45,7 +45,7 @@ async fn new_config(
 #[get("/configs/{id}")]
 async fn get_config(
     auth: BearerAuth,
-    pool: web::Data<MySqlPool>,
+    pool: web::Data<DbPool>,
     path: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
     let token = String::from(auth.token());
@@ -66,7 +66,7 @@ async fn get_config(
 #[patch("/configs/{id}")]
 async fn update_config(
     auth: BearerAuth,
-    pool: web::Data<MySqlPool>,
+    pool: web::Data<DbPool>,
     path: web::Path<i32>,
     json: web::Json<UpdateConfig>,
 ) -> Result<HttpResponse, Error> {
@@ -102,7 +102,7 @@ async fn update_config(
 #[delete("/configs/{id}")]
 async fn delete_config(
     auth: BearerAuth,
-    pool: web::Data<MySqlPool>,
+    pool: web::Data<DbPool>,
     path: web::Path<i32>,
 ) -> Result<HttpResponse, Error> {
     let token = String::from(auth.token());

@@ -1,16 +1,21 @@
 [package]
 name = "rtabby-web-api"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 
 [features]
+default = ["mysql"]
 dotenv = ["dep:dotenvy"]
-mysqlclient-static = []
+mysql = ["diesel/mysql"]
+mysqlclient-static = ["mysql"]
+sqlite = ["diesel/sqlite"]
+sqlite-bundle = ["sqlite", "libsqlite3-sys/bundled"]
 
 [dev-dependencies]
 dotenvy = "0.15.6"
 
 [dependencies]
+cfg-if = "1.0.0"
 env_logger = "0.10.0"
 log = "0.4.16"
 dotenvy = {version = "0.15.6", optional = true}
@@ -19,7 +24,8 @@ rustls-pemfile = "1.0.0"
 actix-web = { version = "4.2.1", features = ["rustls-0_21"]  }
 actix-web-httpauth = "0.8.0"
 chrono = { version = "0.4.22", features = ["serde"] }
-diesel = { version = "2.0.2", features = ["mysql", "chrono", "r2d2"] }
+libsqlite3-sys = { version = "0", optional = true }
+diesel = { version = "2.0.2", features = ["chrono", "r2d2"] }
 diesel_migrations = "2.0.0"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_yaml = "0.9.16"
