@@ -6,6 +6,8 @@ on:
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ "master" ]
+  release:
+      types: [published]
 
 env:
   CARGO_TERM_COLOR: always
@@ -34,7 +36,7 @@ jobs:
 
   docker:
     name: Docker
-    if: github.event_name != 'pull_request' && ${{ always() && contains(join(needs.*.result, ','), 'success') }}
+    if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
     needs: [clippy, build]
     runs-on: ubuntu-latest
     permissions:
@@ -86,7 +88,7 @@ jobs:
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
           context: .
-          push: true
+          push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -107,7 +109,7 @@ jobs:
         run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
   docker-sqlite:
     name: Docker (Sqlite)
-    if: github.event_name != 'pull_request' && ${{ always() && contains(join(needs.*.result, ','), 'success') }}
+    if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
     needs: [clippy, build]
     runs-on: ubuntu-latest
     permissions:
@@ -160,7 +162,7 @@ jobs:
         with:
           context: .
           file: Dockerfile-sqlite
-          push: true
+          push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
