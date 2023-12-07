@@ -20,6 +20,8 @@ services:
       - DATABASE_URL=sqlite:///config/db.sqlite
     volumes:
       - ./config:/config
+    networks:
+      - frontend
 networks:
-  default:
+  frontend:
     name: rtabby_net_frontend
