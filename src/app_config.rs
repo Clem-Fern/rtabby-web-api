@@ -1,6 +1,6 @@
 use log::warn;
 use serde::Deserialize;
-use crate::models::user::{User, UserWithoutToken};
+use crate::models::user::{LocalUser, UserWithoutToken};
 use crate::error::ConfigError;
 use std::collections::HashMap;
 use std::fs::File;
@@ -9,7 +9,7 @@ use std::io::Write;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfig {
-    pub users: Vec<User>,
+    pub users: Vec<LocalUser>,
 }
 
 pub fn load_file(file: &str) -> Result<AppConfig, ConfigError> {

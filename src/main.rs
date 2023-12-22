@@ -82,10 +82,8 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
             .app_data(web::Data::new(config.clone())) // App Config Data
             .app_data(web::Data::new(pool.clone())) // Database Pool Data
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
-            // AUTH
-            .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator))
-            //
             .configure(api_v1_config)
+            .configure(login_config)
     });
 
     // socket var
@@ -124,6 +122,13 @@ fn api_v1_config(cfg: &mut web::ServiceConfig) {
             web::scope("/1")
                 .configure(routes::user::user_route_config) // USER ROUTE
                 .configure(routes::config::config_route_config),
-        ),
+        )
+        // AUTH
+        .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator))
     );
+}
+
+fn login_config(cfg: &mut web::ServiceConfig) {
+    cfg.service(web::scope("/"))
+    .configure(routes::login::user_login_route_config);
 }
