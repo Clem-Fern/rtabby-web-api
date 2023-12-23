@@ -17,6 +17,7 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize)]
 pub struct Params {
     code: String,
+    state: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,20 +59,49 @@ async fn login(
     // get code parameter from request
     let mut context = tera::Context::new();
     println!("client_id: {}", env::ENV_GITHUB_APP_CLIENT_ID);
+    let state = Uuid::new_v4().to_string();
     let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
-    let login_url = format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback", client_id, req.connection_info().scheme(), req.connection_info().host());
+    let login_url = format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback&state={}", client_id, req.connection_info().scheme(), req.connection_info().host(), state);
     context.insert("login_url", &login_url);
     let body = Tera::new("src/templates/**/*").unwrap().render("home.tpl", &context).unwrap();
-    Ok(HttpResponse::Ok().body(body))
+
+    let mut resp = HttpResponse::Ok()
+    .body(body);
+    let ret = resp.add_cookie(&actix_web::cookie::Cookie::build("state", &state)
+    .path("/")
+    .http_only(true)
+    .finish());
+    if let Err(err) = ret {
+        error!("add cookie failed: {}", err);
+        return Ok(HttpResponse::InternalServerError().finish());
+    }
+    return Ok(resp);
 }
 
 #[get("/login/github/callback")]
 async fn login_github_callback(
     info: web::Query<Params>,
     pool: web::Data<DbPool>,
+    req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
+    if let Some(state) =  req.cookie("state") {
+        if state.value() != info.state {
+            error!("state not match");
+            let rediret = HttpResponse::Found()
+            .append_header(("Location", "/login"))
+            .finish();
+            return Ok(rediret);
+        }
+    }
+    else {
+        error!("state not fount");
+        let rediret = HttpResponse::Found()
+        .append_header(("Location", "/login"))
+        .finish();
+        return Ok(rediret);
+    }
+    
     let client = reqwest::Client::new();
-
     let mut map = HashMap::new();
     map.insert("code", &info.code);
     let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
