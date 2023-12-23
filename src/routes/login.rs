@@ -31,20 +31,6 @@ pub struct UserInfo {
     name: String,
 }
 
-#[get("/login")]
-async fn login(
-    req: HttpRequest,
-) -> Result<HttpResponse, Error> {
-    // get code parameter from request
-    let mut context = tera::Context::new();
-    println!("client_id: {}", env::ENV_GITHUB_APP_CLIENT_ID);
-    let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
-    let login_url = format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback", client_id, req.connection_info().scheme(), req.connection_info().host());
-    context.insert("login_url", &login_url);
-    let body = Tera::new("src/templates/**/*").unwrap().render("home.tpl", &context).unwrap();
-    Ok(HttpResponse::Ok().body(body))
-}
-
 async fn get_user_info(
     token: String,
 ) -> Result<reqwest::Response, reqwest::Error> {
@@ -59,23 +45,24 @@ async fn get_user_info(
     return res;
 }
 
-
-#[get("/login/success")]
-async fn login_success(
+#[get("/login")]
+async fn login(
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    // get token from cookie
     if let Some(token) = req.cookie("token") {
         let mut context = tera::Context::new();
         context.insert("token", &token.value());
         let body = Tera::new("src/templates/**/*").unwrap().render("success.tpl", &context).unwrap();
         return Ok(HttpResponse::Ok().body(body));
     }
-    else {
-        let context = tera::Context::new();
-        let body = Tera::new("src/templates/**/*").unwrap().render("error.tpl", &context).unwrap();
-        return Ok(HttpResponse::Ok().body(body));
-    }
+    // get code parameter from request
+    let mut context = tera::Context::new();
+    println!("client_id: {}", env::ENV_GITHUB_APP_CLIENT_ID);
+    let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
+    let login_url = format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback", client_id, req.connection_info().scheme(), req.connection_info().host());
+    context.insert("login_url", &login_url);
+    let body = Tera::new("src/templates/**/*").unwrap().render("home.tpl", &context).unwrap();
+    Ok(HttpResponse::Ok().body(body))
 }
 
 #[get("/login/github/callback")]
@@ -141,7 +128,7 @@ async fn login_github_callback(
 
                     // redirect to login success page with 302, and set cookie
                     let redirect = HttpResponse::Found()
-                    .append_header(("Location", "/login/success"))
+                    .append_header(("Location", "/login"))
                     .cookie(actix_web::cookie::Cookie::build("token", &current_user_token)
                     .path("/")
                     .http_only(true)
@@ -166,5 +153,4 @@ async fn login_github_callback(
 pub fn user_login_route_config(cfg: &mut web::ServiceConfig) {
     cfg.service(login);
     cfg.service(login_github_callback);
-    cfg.service(login_success);
 }
