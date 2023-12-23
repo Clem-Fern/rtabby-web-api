@@ -59,8 +59,27 @@ async fn get_user_info(
     return res;
 }
 
+
+#[get("/login/success")]
+async fn login_success(
+    req: HttpRequest,
+) -> Result<HttpResponse, Error> {
+    // get token from cookie
+    if let Some(token) = req.cookie("token") {
+        let mut context = tera::Context::new();
+        context.insert("token", &token.value());
+        let body = Tera::new("src/templates/**/*").unwrap().render("success.tpl", &context).unwrap();
+        return Ok(HttpResponse::Ok().body(body));
+    }
+    else {
+        let context = tera::Context::new();
+        let body = Tera::new("src/templates/**/*").unwrap().render("error.tpl", &context).unwrap();
+        return Ok(HttpResponse::Ok().body(body));
+    }
+}
+
 #[get("/login/github/callback")]
-async fn login_redirect(
+async fn login_github_callback(
     info: web::Query<Params>,
     pool: web::Data<DbPool>,
 ) -> Result<HttpResponse, Error> {
@@ -94,8 +113,12 @@ async fn login_redirect(
                         let mut conn = clone_pool.get()?;
                         return User::get_user(&mut conn, &user_info.id.to_string(), "github");
                     }).await.map_err(actix_web::error::ErrorInternalServerError)?;
+
+                    let current_user_token: String;
                     if let Ok(Some(current_user)) = current_user {
-                        context.insert("token", &current_user.token);
+                        current_user_token = current_user.token.clone();
+                        context.insert("token", &current_user_token);
+                        
                     }
                     else {
                         let new_uuid = Uuid::new_v4().to_string();
@@ -113,10 +136,18 @@ async fn login_redirect(
                         .map_err(actix_web::error::ErrorInternalServerError)?;
 
                         context.insert("token", &new_uuid);
+                        current_user_token = new_uuid;
                     }
 
-                    let body = Tera::new("src/templates/**/*").unwrap().render("success.tpl", &context).unwrap();
-                    return Ok(HttpResponse::Ok().body(body));
+                    // redirect to login success page with 302, and set cookie
+                    let redirect = HttpResponse::Found()
+                    .append_header(("Location", "/login/success"))
+                    .cookie(actix_web::cookie::Cookie::build("token", &current_user_token)
+                    .path("/")
+                    .http_only(true)
+                    .finish())
+                    .finish();
+                    return Ok(redirect);
                 }
                 else {
                     error!("login failed");
@@ -134,5 +165,6 @@ async fn login_redirect(
 
 pub fn user_login_route_config(cfg: &mut web::ServiceConfig) {
     cfg.service(login);
-    cfg.service(login_redirect);
+    cfg.service(login_github_callback);
+    cfg.service(login_success);
 }

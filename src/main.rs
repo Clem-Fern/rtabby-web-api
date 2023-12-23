@@ -20,6 +20,8 @@ extern crate serde_yaml;
 
 extern crate actix_web;
 use actix_web::{middleware, web, App, HttpServer};
+use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+use actix_web::cookie::Key;
 
 extern crate actix_web_httpauth;
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -129,6 +131,13 @@ fn api_v1_config(cfg: &mut web::ServiceConfig) {
 }
 
 fn login_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/"))
-    .configure(routes::login::user_login_route_config);
+    let secret_key = Key::generate();
+    cfg.service(web::scope("/").wrap(
+        SessionMiddleware::new(
+            CookieSessionStore::default(),
+            secret_key.clone()
+        )
+    ))
+    .configure(routes::login::user_login_route_config)
+    ;
 }
