@@ -70,6 +70,7 @@ async fn login(
     let ret = resp.add_cookie(&actix_web::cookie::Cookie::build("state", &state)
     .path("/")
     .http_only(true)
+    .expires(actix_web::cookie::time::OffsetDateTime::now_utc() + actix_web::cookie::time::Duration::minutes(5))
     .finish());
     if let Err(err) = ret {
         error!("add cookie failed: {}", err);
