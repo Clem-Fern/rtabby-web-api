@@ -154,5 +154,5 @@ fn login_config(cfg: &mut web::ServiceConfig) {
 }
 
 fn static_files_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(fs::Files::new("/static", "./web/static"));
+    cfg.service(fs::Files::new("/static", env::static_files_base_dir() + "static"));
 }
