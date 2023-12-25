@@ -2,7 +2,8 @@
 FROM rust:1.73-alpine AS builder
 WORKDIR /build
 COPY . .
-RUN apk add --no-cache build-base && \
+RUN apk add --no-cache build-base openssl-dev && \
+    export OPENSSL_DIR=/usr && \
     cargo build --target=x86_64-unknown-linux-musl --release --no-default-features -F sqlite-bundle
 
 FROM scratch

@@ -2,7 +2,8 @@
 FROM rust:1.73-alpine AS builder
 WORKDIR /build
 COPY . .
-RUN apk add --no-cache build-base binutils mariadb-dev musl-dev bash cmake curl && \
+RUN apk add --no-cache build-base binutils mariadb-dev musl-dev bash cmake curl openssl-dev && \
+    export OPENSSL_DIR=/usr && \
     bash scripts/mariadb-static-build.sh && \ 
     bash scripts/zlib-static-build.sh && \
     ar x lib/libmysqlclient.a && \
