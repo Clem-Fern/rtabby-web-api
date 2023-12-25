@@ -18,5 +18,6 @@ WORKDIR /config
 
 COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/rtabby-web-api /
 COPY --from=builder /build/users.exemple.yml .
+COPY --from=builder /build/web/static /config/web/static
 
 CMD ["/rtabby-web-api"]

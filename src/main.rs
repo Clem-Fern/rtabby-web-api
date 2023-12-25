@@ -19,7 +19,7 @@ mod schema;
 extern crate serde_yaml;
 
 extern crate actix_web;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{middleware, web, App, HttpServer, HttpResponse, get};
 use actix_files as fs;
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
 use actix_web::cookie::Key;
@@ -55,6 +55,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 }
 
+#[get("/")]
+async fn index() -> Result<HttpResponse, actix_web::Error> {
+    let rediret = HttpResponse::Found()
+    .append_header(("Location", "/login"))
+    .finish();
+    return Ok(rediret);
+}
+
 async fn run_app() -> Result<(), Box<dyn Error>> {
     // LOAD CONFIG FILE
     let config_file_name = env::var(env::ENV_CONFIG_FILE).unwrap_or(String::from("users.yml"));
@@ -82,6 +90,7 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
     let mut server = HttpServer::new(move || {
         App::new()
+            .service(index)
             .app_data(web::Data::new(config.clone())) // App Config Data
             .app_data(web::Data::new(pool.clone())) // Database Pool Data
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
