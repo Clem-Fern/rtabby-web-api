@@ -100,7 +100,7 @@ async fn login_github_callback(
         }
     }
     else {
-        error!("state not fount");
+        error!("state not found");
         let rediret = HttpResponse::Found()
         .append_header(("Location", "/login"))
         .finish();
