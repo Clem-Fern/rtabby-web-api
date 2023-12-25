@@ -14,6 +14,7 @@ pub const ENV_GITHUB_APP_CLIENT_ID: &str = "GITHUB_APP_CLIENT_ID";
 pub const ENV_GITHUB_APP_CLIENT_SECRET: &str = "GITHUB_APP_CLIENT_SECRET";
 
 pub const ENV_STATIC_FILES_BASE_DIR: &str = "STATIC_FILES_BASE_DIR";
+pub const ENV_USE_HTTPS: &str = "USE_HTTPS";
 
 pub fn init() {
     // LOAD ENV VAR from .env if dotenv feature is enable

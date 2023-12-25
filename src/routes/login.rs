@@ -60,7 +60,13 @@ async fn login(
     let mut context = tera::Context::new();
     let state = Uuid::new_v4().to_string();
     let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
-    let login_url = format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback&state={}", client_id, req.connection_info().scheme(), req.connection_info().host(), state);
+    let scheme = if env::var(env::ENV_USE_HTTPS).unwrap_or(String::from("0")) == "1" {
+        "https"
+    }
+    else {
+        "http"
+    }; 
+    let login_url = format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback&state={}", client_id, scheme, req.connection_info().host(), state);
     context.insert("login_url", &login_url);
     let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("login.html", &context).unwrap();
 
