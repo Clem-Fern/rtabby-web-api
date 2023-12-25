@@ -20,6 +20,7 @@ extern crate serde_yaml;
 
 extern crate actix_web;
 use actix_web::{middleware, web, App, HttpServer};
+use actix_files as fs;
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
 use actix_web::cookie::Key;
 
@@ -86,6 +87,7 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
             .configure(api_v1_config)
             .configure(login_config)
+            .configure(static_files_config)
     });
 
     // socket var
@@ -140,4 +142,8 @@ fn login_config(cfg: &mut web::ServiceConfig) {
     ))
     .configure(routes::login::user_login_route_config)
     ;
+}
+
+fn static_files_config(cfg: &mut web::ServiceConfig) {
+    cfg.service(fs::Files::new("/static", "./web/static"));
 }

@@ -53,7 +53,7 @@ async fn login(
     if let Some(token) = req.cookie("token") {
         let mut context = tera::Context::new();
         context.insert("token", &token.value());
-        let body = Tera::new("src/templates/**/*").unwrap().render("success.tpl", &context).unwrap();
+        let body = Tera::new("src/templates/**/*").unwrap().render("success.html", &context).unwrap();
         return Ok(HttpResponse::Ok().body(body));
     }
     // get code parameter from request
@@ -63,7 +63,7 @@ async fn login(
     let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
     let login_url = format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback&state={}", client_id, req.connection_info().scheme(), req.connection_info().host(), state);
     context.insert("login_url", &login_url);
-    let body = Tera::new("src/templates/**/*").unwrap().render("home.tpl", &context).unwrap();
+    let body = Tera::new("src/templates/**/*").unwrap().render("login.html", &context).unwrap();
 
     let mut resp = HttpResponse::Ok()
     .body(body);
@@ -170,14 +170,14 @@ async fn login_github_callback(
                 else {
                     error!("login failed");
                     let context = tera::Context::new();
-                    let body = Tera::new("src/templates/**/*").unwrap().render("error.tpl", &context).unwrap();
+                    let body = Tera::new("src/templates/**/*").unwrap().render("error.html", &context).unwrap();
                     return Ok(HttpResponse::Ok().body(body));
                 }
             }
         }
     }
     let context = tera::Context::new();
-    let body = Tera::new("src/templates/**/*").unwrap().render("home.tpl", &context).unwrap();
+    let body = Tera::new("src/templates/**/*").unwrap().render("login.html", &context).unwrap();
     Ok(HttpResponse::Ok().body(body))
 }
 
