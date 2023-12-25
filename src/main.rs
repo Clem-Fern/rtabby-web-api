@@ -60,7 +60,7 @@ async fn index() -> Result<HttpResponse, actix_web::Error> {
     let rediret = HttpResponse::Found()
     .append_header(("Location", "/login"))
     .finish();
-    return Ok(rediret);
+    Ok(rediret)
 }
 
 async fn run_app() -> Result<(), Box<dyn Error>> {
@@ -146,7 +146,7 @@ fn login_config(cfg: &mut web::ServiceConfig) {
     cfg.service(web::scope("/").wrap(
         SessionMiddleware::new(
             CookieSessionStore::default(),
-            secret_key.clone()
+            secret_key
         )
     ))
     .configure(routes::login::user_login_route_config)

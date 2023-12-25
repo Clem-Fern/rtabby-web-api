@@ -36,14 +36,14 @@ async fn get_user_info(
     token: String,
 ) -> Result<reqwest::Response, reqwest::Error> {
     let client = reqwest::Client::new();
-    let res = client.get("https://api.github.com/user")
+    
+    client.get("https://api.github.com/user")
     .header("Authorization", format!("Bearer {}", token))
     .header("User-Agent", "actix-web/3.3.2")
     .header("X-GitHub-Api-Version", "2022-11-28")
     .header("Accept", "application/vnd.github.v3+json")
     .send()
-    .await;
-    return res;
+    .await
 }
 
 #[get("/login")]
@@ -76,7 +76,7 @@ async fn login(
         error!("add cookie failed: {}", err);
         return Ok(HttpResponse::InternalServerError().finish());
     }
-    return Ok(resp);
+    Ok(resp)
 }
 
 #[get("/login/github/callback")]
@@ -129,12 +129,12 @@ async fn login_github_callback(
                     let clone_pool = pool.clone();
                     let current_user = web::block(move || {
                         let mut conn = clone_pool.get()?;
-                        return User::get_user(&mut conn, &user_info.id.to_string(), "github");
+                        User::get_user(&mut conn, &user_info.id.to_string(), "github")
                     }).await.map_err(actix_web::error::ErrorInternalServerError)?;
 
                     let current_user_token: String;
                     if let Ok(Some(current_user)) = current_user {
-                        current_user_token = current_user.token.clone();
+                        current_user_token = current_user.token;
                         context.insert("token", &current_user_token);
                         
                     }
@@ -148,7 +148,7 @@ async fn login_github_callback(
                         };
                         web::block(move || {
                             let mut conn = pool.get()?;
-                            return User::insert_new_user_config(&mut conn, new_user);
+                            User::insert_new_user_config(&mut conn, new_user)
                         })
                         .await?
                         .map_err(actix_web::error::ErrorInternalServerError)?;
