@@ -6,6 +6,7 @@ use tera::Tera;
 use serde::Deserialize;
 
 use crate::login::github::Github;
+use crate::login::gitlab::GitLab;
 use crate::storage::DbPool;
 use async_trait::async_trait;
 use log::{info, error};
@@ -26,7 +27,7 @@ pub struct Params {
 pub trait LoginProvider {
     fn name(&self) -> String;
     fn login_url(&self, host: String, state: String) -> String;
-    async fn user_info(&self, code: String) -> Result<ThirdPartyUserInfo, Error>;
+    async fn user_info(&self, host: String, code: String) -> Result<ThirdPartyUserInfo, Error>;
 }
 
 #[derive(Debug, Deserialize)]
@@ -56,6 +57,13 @@ async fn home(
         map
     });
 
+    platforms.push({
+        let mut map = HashMap::new();
+        map.insert("name", GitLab.name());
+        map.insert("url", GitLab.login_url(req.connection_info().host().to_string(), state.clone()));
+        map
+    });
+
     let mut context = tera::Context::new();
     context.insert("platforms", &platforms);
     let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("login.html", &context).unwrap();
@@ -80,7 +88,17 @@ async fn login_github_callback(
     pool: web::Data<DbPool>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let user_info = Github.user_info(info.code.clone()).await;
+    let user_info = Github.user_info(req.connection_info().host().to_string(), info.code.clone()).await;
+    login_callback(info, pool, req, user_info).await
+}
+
+#[get("/login/gitlab/callback")]
+async fn login_gitlab_callback(
+    info: web::Query<Params>,
+    pool: web::Data<DbPool>,
+    req: HttpRequest,
+) -> Result<HttpResponse, Error> {
+    let user_info = GitLab.user_info(req.connection_info().host().to_string(), info.code.clone()).await;
     login_callback(info, pool, req, user_info).await
 }
 
@@ -130,7 +148,7 @@ async fn login_callback(
             let new_user = NewUser {
                 name: user.name,
                 user_id: user.id,
-                platform: user.platform,
+                platform: user.platform.to_lowercase(),
                 token: new_uuid.clone(),
             };
             web::block(move || {
@@ -165,4 +183,5 @@ async fn login_callback(
 
 pub fn user_login_route_config(cfg: &mut web::ServiceConfig) {
     cfg.service(login_github_callback);
+    cfg.service(login_gitlab_callback);
 }
