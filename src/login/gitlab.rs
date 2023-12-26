@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use async_trait::async_trait;
-use log::info;
 use crate::{routes::login::{LoginProvider, ThirdPartyUserInfo}, login::tools};
 use actix_web::Error;
 use crate::env;
@@ -54,44 +53,33 @@ impl LoginProvider for GitLab {
         map.insert("client_secret", &client_secret);
         map.insert("grant_type", &grant_type);
         map.insert("redirect_uri", &redirect_uri);
-        info!("map: {:?}", map);
     
         let res = client.post("https://gitlab.com/oauth/token")
         .header("Accept", "application/json")
         .form(&map)
         .send()
         .await;
-        // print res body
         if let Ok(res) = res {
-            info!("res: {:?}", res);
             let body = res.json::<Body>().await;
             if let Ok(body) = body {
-                info!("body: {:?}", body);
                 if let Ok(user_info_resp) = get_user_info(body.access_token).await {
                     let user_info = user_info_resp.json::<UserInfo>().await;
                     if let Ok(user_info) = user_info {
                         Ok(ThirdPartyUserInfo {
                             id: user_info.id.to_string(),
                             name: user_info.name,
-                            platform: String::from("github"),
+                            platform: self.name().to_lowercase(),
                         })
                     } else {
-                        info!("1");
                         Err(actix_web::error::ErrorInternalServerError("Failed to get user info4"))
                     }
                 } else {
-                    info!("2");
                     Err(actix_web::error::ErrorInternalServerError("Failed to get user info3"))
                 }
             } else {
-                info!("3");
                 Err(actix_web::error::ErrorInternalServerError("Failed to get user info2"))
             }
         } else {
-            info!("4");
-            if let Err(err) = res {
-                info!("err: {:?}", err);
-            } 
             Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
         }
     }

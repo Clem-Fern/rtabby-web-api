@@ -7,6 +7,7 @@ use serde::Deserialize;
 
 use crate::login::github::Github;
 use crate::login::gitlab::GitLab;
+use crate::login::google::Google;
 use crate::storage::DbPool;
 use async_trait::async_trait;
 use log::{info, error};
@@ -64,6 +65,13 @@ async fn home(
         map
     });
 
+    platforms.push({
+        let mut map = HashMap::new();
+        map.insert("name", Google.name());
+        map.insert("url", Google.login_url(req.connection_info().host().to_string(), state.clone()));
+        map
+    });
+
     let mut context = tera::Context::new();
     context.insert("platforms", &platforms);
     let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("login.html", &context).unwrap();
@@ -80,6 +88,16 @@ async fn home(
         return Ok(HttpResponse::InternalServerError().finish());
     }
     Ok(resp)
+}
+
+#[get("/login/google/callback")]
+async fn login_google_callback(
+    info: web::Query<Params>,
+    pool: web::Data<DbPool>,
+    req: HttpRequest,
+) -> Result<HttpResponse, Error> {
+    let user_info = Google.user_info(req.connection_info().host().to_string(), info.code.clone()).await;
+    login_callback(info, pool, req, user_info).await
 }
 
 #[get("/login/github/callback")]
@@ -184,4 +202,5 @@ async fn login_callback(
 pub fn user_login_route_config(cfg: &mut web::ServiceConfig) {
     cfg.service(login_github_callback);
     cfg.service(login_gitlab_callback);
+    cfg.service(login_google_callback);
 }

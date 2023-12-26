@@ -13,7 +13,7 @@ pub struct Body {
 
 #[derive(Debug, Deserialize)]
 pub struct UserInfo {
-    id: i32,
+    id: String,
     name: String,
 }
 
@@ -22,38 +22,39 @@ async fn get_user_info(
 ) -> Result<reqwest::Response, reqwest::Error> {
     let client = reqwest::Client::new();
     
-    client.get("https://api.github.com/user")
+    client.get("https://www.googleapis.com/oauth2/v1/userinfo")
     .header("Authorization", format!("Bearer {}", token))
-    .header("User-Agent", "actix-web/3.3.2")
-    .header("X-GitHub-Api-Version", "2022-11-28")
-    .header("Accept", "application/vnd.github.v3+json")
     .send()
     .await
 }
 
-pub struct Github;
+pub struct Google;
 
 #[async_trait]
-impl LoginProvider for Github {
+impl LoginProvider for Google {
     fn name(&self) -> String {
-        String::from("Github")
+        String::from("Google")
     }
 
     fn login_url(&self, host: String, state: String) -> String {
-        let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
-        format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback&state={}", client_id, tools::scheme(), host, state)
+        let client_id = env::var(env::ENV_GOOGLE_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
+        format!( "https://accounts.google.com/o/oauth2/v2/auth?client_id={}&redirect_uri={}://{}/login/google/callback&state={}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile", client_id, tools::scheme(), host, state)
     }
 
-    async fn user_info(&self, _host: String, code: String) -> Result<ThirdPartyUserInfo, Error> {
+    async fn user_info(&self, host: String, code: String) -> Result<ThirdPartyUserInfo, Error> {
         let client = reqwest::Client::new();
         let mut map = HashMap::new();
         map.insert("code", &code);
-        let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
-        let client_secret = env::var(env::ENV_GITHUB_APP_CLIENT_SECRET).expect("Missing GITHUB_APP_CLIENT_SECRET env var");
+        let client_id = env::var(env::ENV_GOOGLE_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
+        let client_secret = env::var(env::ENV_GOOGLE_APP_CLIENT_SECRET).expect("Missing GITHUB_APP_CLIENT_SECRET env var");
+        let grant_type = String::from("authorization_code");
+        let redirect_uri = format!("{}://{}/login/google/callback", tools::scheme(), host);
         map.insert("client_id", &client_id);
         map.insert("client_secret", &client_secret);
+        map.insert("grant_type", &grant_type);
+        map.insert("redirect_uri", &redirect_uri);
     
-        let res = client.post("https://github.com/login/oauth/access_token")
+        let res = client.post("https://accounts.google.com/o/oauth2/token")
         .json(&map)
         .header("Accept", "application/json")
         .send()
