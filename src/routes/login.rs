@@ -46,8 +46,8 @@ async fn get_user_info(
     .await
 }
 
-#[get("/login")]
-async fn login(
+#[get("/")]
+async fn home(
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
     if let Some(token) = req.cookie("token") {
@@ -94,7 +94,7 @@ async fn login_github_callback(
         if state.value() != info.state {
             error!("state not match");
             let rediret = HttpResponse::Found()
-            .append_header(("Location", "/login"))
+            .append_header(("Location","/"))
             .finish();
             return Ok(rediret);
         }
@@ -102,7 +102,7 @@ async fn login_github_callback(
     else {
         error!("state not found");
         let rediret = HttpResponse::Found()
-        .append_header(("Location", "/login"))
+        .append_header(("Location","/"))
         .finish();
         return Ok(rediret);
     }
@@ -164,7 +164,7 @@ async fn login_github_callback(
 
                     // redirect to login success page with 302, and set cookie
                     let redirect = HttpResponse::Found()
-                    .append_header(("Location", "/login"))
+                    .append_header(("Location","/"))
                     .cookie(actix_web::cookie::Cookie::build("token", &current_user_token)
                     .path("/")
                     .http_only(true)
@@ -187,6 +187,5 @@ async fn login_github_callback(
 }
 
 pub fn user_login_route_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(login);
     cfg.service(login_github_callback);
 }

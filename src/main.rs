@@ -19,7 +19,7 @@ mod schema;
 extern crate serde_yaml;
 
 extern crate actix_web;
-use actix_web::{middleware, web, App, HttpServer, HttpResponse, get};
+use actix_web::{middleware, web, App, HttpServer};
 use actix_files as fs;
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
 use actix_web::cookie::Key;
@@ -55,14 +55,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 }
 
-#[get("/")]
-async fn index() -> Result<HttpResponse, actix_web::Error> {
-    let rediret = HttpResponse::Found()
-    .append_header(("Location", "/login"))
-    .finish();
-    Ok(rediret)
-}
-
 async fn run_app() -> Result<(), Box<dyn Error>> {
     // LOAD CONFIG FILE
     let config_file_name = env::var(env::ENV_CONFIG_FILE).unwrap_or(String::from("users.yml"));
@@ -87,13 +79,14 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
 
     let pool = storage.pool()?;
-
     let mut server = HttpServer::new(move || {
+        let secret_key = Key::generate();
         App::new()
-            .service(index)
+            .service(routes::login::home)
             .app_data(web::Data::new(config.clone())) // App Config Data
             .app_data(web::Data::new(pool.clone())) // Database Pool Data
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
+            .wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key))
             .configure(api_v1_config)
             .configure(login_config)
             .configure(static_files_config)
@@ -142,13 +135,7 @@ fn api_v1_config(cfg: &mut web::ServiceConfig) {
 }
 
 fn login_config(cfg: &mut web::ServiceConfig) {
-    let secret_key = Key::generate();
-    cfg.service(web::scope("/").wrap(
-        SessionMiddleware::new(
-            CookieSessionStore::default(),
-            secret_key
-        )
-    ))
+    cfg.service(web::scope("/"))
     .configure(routes::login::user_login_route_config)
     ;
 }
