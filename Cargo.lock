@@ -1700,6 +1700,7 @@ dependencies = [
  "actix-session",
  "actix-web",
  "actix-web-httpauth",
+ "async-trait",
  "cfg-if",
  "chrono",
  "diesel",

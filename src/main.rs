@@ -15,6 +15,7 @@ mod auth;
 mod models;
 mod routes;
 mod schema;
+mod login;
 
 extern crate serde_yaml;
 

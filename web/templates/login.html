@@ -11,7 +11,9 @@
 
 <div class="container">
   <h1>Login To Get Sync Token</h1>
-  <a href="{{ login_url }}" class="btn">Login With GitHub</a>
+  {% for platform in platforms %}
+  <a href="{{ platform.url }}" class="btn">Login With {{ platform.name }}</a>
+  {% endfor %}
 </div>
 
 </body>
