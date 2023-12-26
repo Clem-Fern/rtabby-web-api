@@ -26,7 +26,7 @@ pub struct Params {
 pub trait LoginProvider {
     fn name(&self) -> String;
     fn login_url(&self, host: String, state: String) -> String;
-    async fn user_id(&self, code: String) -> Result<ThirdPartyUserInfo, Error>;
+    async fn user_info(&self, code: String) -> Result<ThirdPartyUserInfo, Error>;
 }
 
 #[derive(Debug, Deserialize)]
@@ -80,7 +80,7 @@ async fn login_github_callback(
     pool: web::Data<DbPool>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let user_info = Github.user_id(info.code.clone()).await;
+    let user_info = Github.user_info(info.code.clone()).await;
     login_callback(info, pool, req, user_info).await
 }
 

@@ -50,7 +50,7 @@ impl LoginProvider for Github {
         format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback&state={}", client_id, scheme, host, state)
     }
 
-    async fn user_id(&self, code: String) -> Result<ThirdPartyUserInfo, Error> {
+    async fn user_info(&self, code: String) -> Result<ThirdPartyUserInfo, Error> {
         let client = reqwest::Client::new();
         let mut map = HashMap::new();
         map.insert("code", &code);
