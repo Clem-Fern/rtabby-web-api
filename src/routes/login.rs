@@ -8,6 +8,7 @@ use serde::Deserialize;
 use crate::login::github::Github;
 use crate::login::gitlab::GitLab;
 use crate::login::google::Google;
+use crate::login::microsoft::Microsoft;
 use crate::login::provider::ThirdPartyUserInfo;
 use crate::login::provider::LoginProvider;
 use crate::storage::DbPool;
@@ -36,6 +37,7 @@ async fn home(
         return Ok(HttpResponse::Ok().body(body));
     }
     let state = Uuid::new_v4().to_string();
+    
     let mut platforms = Vec::<HashMap::<&str, String>>::new();
 
     platforms.push({
@@ -59,6 +61,13 @@ async fn home(
         map
     });
 
+    platforms.push({
+        let mut map = HashMap::new();
+        map.insert("name", Microsoft.name());
+        map.insert("url", Microsoft.login_url(req.connection_info().host().to_string(), state.clone()));
+        map
+    });
+
     let mut context = tera::Context::new();
     context.insert("platforms", &platforms);
     let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("login.html", &context).unwrap();
@@ -75,6 +84,16 @@ async fn home(
         return Ok(HttpResponse::InternalServerError().finish());
     }
     Ok(resp)
+}
+
+#[get("/login/microsoft/callback")]
+async fn login_microsoft_callback(
+    info: web::Query<Params>,
+    pool: web::Data<DbPool>,
+    req: HttpRequest,
+) -> Result<HttpResponse, Error> {
+    let user_info = Microsoft.user_info(req.connection_info().host().to_string(), info.code.clone()).await;
+    login_callback(info, pool, req, user_info).await
 }
 
 #[get("/login/google/callback")]
@@ -190,4 +209,5 @@ pub fn user_login_route_config(cfg: &mut web::ServiceConfig) {
     cfg.service(login_github_callback);
     cfg.service(login_gitlab_callback);
     cfg.service(login_google_callback);
+    cfg.service(login_microsoft_callback);
 }

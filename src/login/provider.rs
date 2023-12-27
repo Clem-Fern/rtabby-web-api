@@ -30,7 +30,13 @@ pub trait LoginProvider {
         .await
     }
 
-    async fn get_access_token(&self, url: String, code: String, client_id: String, client_secret: String, grant_type: String, redirect_uri: Option<String>) -> Result<String, Error> {
+    async fn get_access_token(&self, 
+        url: String, 
+        code: String, 
+        client_id: String, 
+        client_secret: String, 
+        grant_type: String,
+        redirect_uri: Option<String>) -> Result<String, Error> {
         let client = reqwest::Client::new();
         let mut map = HashMap::new();
         map.insert("code", code);
@@ -42,7 +48,7 @@ pub trait LoginProvider {
         }
     
         let res = client.post(url)
-        .json(&map)
+        .form(&map)
         .header("Accept", "application/json")
         .send()
         .await.map_err(|e| {
