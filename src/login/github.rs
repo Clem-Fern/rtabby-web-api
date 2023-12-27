@@ -15,7 +15,7 @@ pub struct Github;
 #[async_trait]
 impl LoginProvider for Github {
     fn name(&self) -> String {
-        String::from("Github")
+        String::from("GitHub")
     }
 
     fn login_url(&self, host: String, state: String) -> String {

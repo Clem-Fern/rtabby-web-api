@@ -5,11 +5,17 @@ use actix_web::{get, web, Error, HttpResponse, HttpRequest};
 use tera::Tera;
 use serde::Deserialize;
 
+#[cfg(feature = "github-login")]
 use crate::login::github::Github;
+#[cfg(feature = "gitlab-login")]
 use crate::login::gitlab::GitLab;
+#[cfg(feature = "google-login")]
 use crate::login::google::Google;
+#[cfg(feature = "microsoft-login")]
 use crate::login::microsoft::Microsoft;
+#[cfg(feature = "third-party-login")]
 use crate::login::provider::ThirdPartyUserInfo;
+#[cfg(feature = "third-party-login")]
 use crate::login::provider::LoginProvider;
 use crate::storage::DbPool;
 use log::{info, error};
@@ -40,7 +46,9 @@ async fn home(
     
     let mut platforms = Vec::<HashMap::<&str, String>>::new();
 
+    #[cfg(feature = "third-party-login")]
     let host = req.connection_info().host().to_string();
+    #[cfg(feature = "github-login")]
     platforms.push({
         let mut map = HashMap::new();
         map.insert("name", Github.name());
@@ -48,6 +56,7 @@ async fn home(
         map
     });
 
+    #[cfg(feature = "gitlab-login")]
     platforms.push({
         let mut map = HashMap::new();
         map.insert("name", GitLab.name());
@@ -55,6 +64,7 @@ async fn home(
         map
     });
 
+    #[cfg(feature = "google-login")]
     platforms.push({
         let mut map = HashMap::new();
         map.insert("name", Google.name());
@@ -62,6 +72,7 @@ async fn home(
         map
     });
 
+    #[cfg(feature = "microsoft-login")]
     platforms.push({
         let mut map = HashMap::new();
         map.insert("name", Microsoft.name());
@@ -87,6 +98,7 @@ async fn home(
     Ok(resp)
 }
 
+#[cfg(feature = "microsoft-login")]
 #[get("/login/microsoft/callback")]
 async fn login_microsoft_callback(
     info: web::Query<Params>,
@@ -98,6 +110,7 @@ async fn login_microsoft_callback(
     login_callback(info, pool, req, user_info).await
 }
 
+#[cfg(feature = "google-login")]
 #[get("/login/google/callback")]
 async fn login_google_callback(
     info: web::Query<Params>,
@@ -109,6 +122,7 @@ async fn login_google_callback(
     login_callback(info, pool, req, user_info).await
 }
 
+#[cfg(feature = "github-login")]
 #[get("/login/github/callback")]
 async fn login_github_callback(
     info: web::Query<Params>,
@@ -120,6 +134,7 @@ async fn login_github_callback(
     login_callback(info, pool, req, user_info).await
 }
 
+#[cfg(feature = "gitlab-login")]
 #[get("/login/gitlab/callback")]
 async fn login_gitlab_callback(
     info: web::Query<Params>,
@@ -210,9 +225,14 @@ async fn login_callback(
     }
 }
 
+#[cfg(feature = "third-party-login")]
 pub fn user_login_route_config(cfg: &mut web::ServiceConfig) {
+    #[cfg(feature = "github-login")]
     cfg.service(login_github_callback);
+    #[cfg(feature = "gitlab-login")]
     cfg.service(login_gitlab_callback);
+    #[cfg(feature = "google-login")]
     cfg.service(login_google_callback);
+    #[cfg(feature = "microsoft-login")]
     cfg.service(login_microsoft_callback);
 }

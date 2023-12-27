@@ -15,14 +15,18 @@ mod auth;
 mod models;
 mod routes;
 mod schema;
+#[cfg(feature = "third-party-login")]
 mod login;
 
 extern crate serde_yaml;
 
 extern crate actix_web;
 use actix_web::{middleware, web, App, HttpServer};
+#[cfg(feature = "third-party-login")]
 use actix_files as fs;
+#[cfg(feature = "third-party-login")]
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+#[cfg(feature = "third-party-login")]
 use actix_web::cookie::Key;
 
 extern crate actix_web_httpauth;
@@ -32,6 +36,13 @@ mod tls;
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    #[cfg(feature = "third-party-login")]
+    {
+        #[cfg(not(any(feature = "github-login", feature = "gitlab-login", feature = "google-login", feature = "microsoft-login")))]
+        {
+            compile_error!("You must enable at least one login provider feature to use the login feature.");
+        }
+    }
     // INITIALIZE LOGGING
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(
         if cfg!(debug_assertions) {
@@ -81,16 +92,23 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
     let pool = storage.pool()?;
     let mut server = HttpServer::new(move || {
-        let secret_key = Key::generate();
-        App::new()
-            .service(routes::login::home)
+        let app = App::new()
             .app_data(web::Data::new(config.clone())) // App Config Data
             .app_data(web::Data::new(pool.clone())) // Database Pool Data
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
-            .wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key))
-            .configure(api_v1_config)
+            .configure(api_v1_config);
+        #[cfg(feature = "third-party-login")]
+        {
+            let secret_key = Key::generate();
+            app.wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key))
+            .service(routes::login::home)
             .configure(login_config)
             .configure(static_files_config)
+        }
+        #[cfg(not(feature = "third-party-login"))]
+        {
+            return app;
+        }
     });
 
     // socket var
@@ -135,12 +153,14 @@ fn api_v1_config(cfg: &mut web::ServiceConfig) {
     );
 }
 
+#[cfg(feature = "third-party-login")]
 fn login_config(cfg: &mut web::ServiceConfig) {
     cfg.service(web::scope("/"))
     .configure(routes::login::user_login_route_config)
     ;
 }
 
+#[cfg(feature = "third-party-login")]
 fn static_files_config(cfg: &mut web::ServiceConfig) {
     cfg.service(fs::Files::new("/static", env::static_files_base_dir() + "static"));
 }
