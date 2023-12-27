@@ -8,8 +8,9 @@ use serde::Deserialize;
 use crate::login::github::Github;
 use crate::login::gitlab::GitLab;
 use crate::login::google::Google;
+use crate::login::provider::ThirdPartyUserInfo;
+use crate::login::provider::LoginProvider;
 use crate::storage::DbPool;
-use async_trait::async_trait;
 use log::{info, error};
 
 use crate::models::user::{User, NewUser};
@@ -22,20 +23,6 @@ use uuid::Uuid;
 pub struct Params {
     code: String,
     state: String,
-}
-
-#[async_trait]
-pub trait LoginProvider {
-    fn name(&self) -> String;
-    fn login_url(&self, host: String, state: String) -> String;
-    async fn user_info(&self, host: String, code: String) -> Result<ThirdPartyUserInfo, Error>;
-}
-
-#[derive(Debug, Deserialize)]
-pub struct ThirdPartyUserInfo {
-    pub id: String,
-    pub name: String,
-    pub platform: String,
 }
 
 #[get("/")]
