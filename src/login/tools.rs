@@ -7,6 +7,6 @@ pub fn scheme() -> String {
     else {
         "http"
     }; 
-    return String::from(scheme);
+    String::from(scheme)
 }
 

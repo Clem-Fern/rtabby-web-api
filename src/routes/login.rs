@@ -40,31 +40,32 @@ async fn home(
     
     let mut platforms = Vec::<HashMap::<&str, String>>::new();
 
+    let host = req.connection_info().host().to_string();
     platforms.push({
         let mut map = HashMap::new();
         map.insert("name", Github.name());
-        map.insert("url", Github.login_url(req.connection_info().host().to_string(), state.clone()));
+        map.insert("url", Github.login_url(host.clone(), state.clone()));
         map
     });
 
     platforms.push({
         let mut map = HashMap::new();
         map.insert("name", GitLab.name());
-        map.insert("url", GitLab.login_url(req.connection_info().host().to_string(), state.clone()));
+        map.insert("url", GitLab.login_url(host.clone(), state.clone()));
         map
     });
 
     platforms.push({
         let mut map = HashMap::new();
         map.insert("name", Google.name());
-        map.insert("url", Google.login_url(req.connection_info().host().to_string(), state.clone()));
+        map.insert("url", Google.login_url(host.clone(), state.clone()));
         map
     });
 
     platforms.push({
         let mut map = HashMap::new();
         map.insert("name", Microsoft.name());
-        map.insert("url", Microsoft.login_url(req.connection_info().host().to_string(), state.clone()));
+        map.insert("url", Microsoft.login_url(host, state.clone()));
         map
     });
 
@@ -92,7 +93,8 @@ async fn login_microsoft_callback(
     pool: web::Data<DbPool>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let user_info = Microsoft.user_info(req.connection_info().host().to_string(), info.code.clone()).await;
+    let host = req.connection_info().host().to_string();
+    let user_info = Microsoft.user_info(host, info.code.clone()).await;
     login_callback(info, pool, req, user_info).await
 }
 
@@ -102,7 +104,8 @@ async fn login_google_callback(
     pool: web::Data<DbPool>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let user_info = Google.user_info(req.connection_info().host().to_string(), info.code.clone()).await;
+    let host = req.connection_info().host().to_string();
+    let user_info = Google.user_info(host, info.code.clone()).await;
     login_callback(info, pool, req, user_info).await
 }
 
@@ -112,7 +115,8 @@ async fn login_github_callback(
     pool: web::Data<DbPool>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let user_info = Github.user_info(req.connection_info().host().to_string(), info.code.clone()).await;
+    let host = req.connection_info().host().to_string();
+    let user_info = Github.user_info(host, info.code.clone()).await;
     login_callback(info, pool, req, user_info).await
 }
 
@@ -122,7 +126,8 @@ async fn login_gitlab_callback(
     pool: web::Data<DbPool>,
     req: HttpRequest,
 ) -> Result<HttpResponse, Error> {
-    let user_info = GitLab.user_info(req.connection_info().host().to_string(), info.code.clone()).await;
+    let host = req.connection_info().host().to_string();
+    let user_info = GitLab.user_info(host, info.code.clone()).await;
     login_callback(info, pool, req, user_info).await
 }
 
