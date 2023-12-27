@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use async_trait::async_trait;
+use log::error;
 use crate::{routes::login::{LoginProvider, ThirdPartyUserInfo}, login::tools};
 use actix_web::Error;
 use crate::env;
@@ -24,6 +25,7 @@ async fn get_user_info(
     
     client.get("https://www.googleapis.com/oauth2/v1/userinfo")
     .header("Authorization", format!("Bearer {}", token))
+    .header("User-Agent", "actix-web/3.3.2")
     .send()
     .await
 }
@@ -37,7 +39,7 @@ impl LoginProvider for Google {
     }
 
     fn login_url(&self, host: String, state: String) -> String {
-        let client_id = env::var(env::ENV_GOOGLE_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
+        let client_id = env::var(env::ENV_GOOGLE_APP_CLIENT_ID).expect("Missing GOOGLE_APP_CLIENT_ID env var");
         format!( "https://accounts.google.com/o/oauth2/v2/auth?client_id={}&redirect_uri={}://{}/login/google/callback&state={}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile", client_id, tools::scheme(), host, state)
     }
 
@@ -45,8 +47,8 @@ impl LoginProvider for Google {
         let client = reqwest::Client::new();
         let mut map = HashMap::new();
         map.insert("code", &code);
-        let client_id = env::var(env::ENV_GOOGLE_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
-        let client_secret = env::var(env::ENV_GOOGLE_APP_CLIENT_SECRET).expect("Missing GITHUB_APP_CLIENT_SECRET env var");
+        let client_id = env::var(env::ENV_GOOGLE_APP_CLIENT_ID).expect("Missing GOOGLE_APP_CLIENT_ID env var");
+        let client_secret = env::var(env::ENV_GOOGLE_APP_CLIENT_SECRET).expect("Missing GOOGLE_APP_CLIENT_SECRET env var");
         let grant_type = String::from("authorization_code");
         let redirect_uri = format!("{}://{}/login/google/callback", tools::scheme(), host);
         map.insert("client_id", &client_id);
@@ -58,30 +60,17 @@ impl LoginProvider for Google {
         .json(&map)
         .header("Accept", "application/json")
         .send()
-        .await;
-        // print res body
-        if let Ok(res) = res {
-            let body = res.json::<Body>().await;
-            if let Ok(body) = body {
-                if let Ok(user_info_resp) = get_user_info(body.access_token).await {
-                    let user_info = user_info_resp.json::<UserInfo>().await;
-                    if let Ok(user_info) = user_info {
-                        Ok(ThirdPartyUserInfo {
-                            id: user_info.id.to_string(),
-                            name: user_info.name,
-                            platform: self.name().to_lowercase()
-                        })
-                    } else {
-                        Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
-                    }
-                } else {
-                    Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
-                }
-            } else {
-                Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
-            }
-        } else {
-            Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
-        }
+        .await.map_err(|e| {
+            error!("Error while getting user info from GitLab: {:?}", e);
+            e
+        });
+    
+        let token = res.unwrap().json::<Body>().await.unwrap().access_token;
+        let user_info = get_user_info(token).await.unwrap().json::<UserInfo>().await.unwrap();
+        Ok(ThirdPartyUserInfo {
+            id: user_info.id.to_string(),
+            name: user_info.name,
+            platform: self.name().to_lowercase(),
+        })
     }
 }

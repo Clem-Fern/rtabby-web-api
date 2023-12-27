@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use async_trait::async_trait;
+use log::error;
 use crate::{routes::login::{LoginProvider, ThirdPartyUserInfo}, login::tools};
 use actix_web::Error;
 use crate::env;
@@ -25,8 +26,6 @@ async fn get_user_info(
     client.get("https://api.github.com/user")
     .header("Authorization", format!("Bearer {}", token))
     .header("User-Agent", "actix-web/3.3.2")
-    .header("X-GitHub-Api-Version", "2022-11-28")
-    .header("Accept", "application/vnd.github.v3+json")
     .send()
     .await
 }
@@ -57,30 +56,17 @@ impl LoginProvider for Github {
         .json(&map)
         .header("Accept", "application/json")
         .send()
-        .await;
-        // print res body
-        if let Ok(res) = res {
-            let body = res.json::<Body>().await;
-            if let Ok(body) = body {
-                if let Ok(user_info_resp) = get_user_info(body.access_token).await {
-                    let user_info = user_info_resp.json::<UserInfo>().await;
-                    if let Ok(user_info) = user_info {
-                        Ok(ThirdPartyUserInfo {
-                            id: user_info.id.to_string(),
-                            name: user_info.name,
-                            platform: self.name().to_lowercase()
-                        })
-                    } else {
-                        Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
-                    }
-                } else {
-                    Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
-                }
-            } else {
-                Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
-            }
-        } else {
-            Err(actix_web::error::ErrorInternalServerError("Failed to get user info"))
-        }
+        .await.map_err(|e| {
+            error!("Error while getting user info from GitHub: {:?}", e);
+            e
+        });
+    
+        let token = res.unwrap().json::<Body>().await.unwrap().access_token;
+        let user_info = get_user_info(token).await.unwrap().json::<UserInfo>().await.unwrap();
+        Ok(ThirdPartyUserInfo {
+            id: user_info.id.to_string(),
+            name: user_info.name,
+            platform: self.name().to_lowercase(),
+        })
     }
 }
