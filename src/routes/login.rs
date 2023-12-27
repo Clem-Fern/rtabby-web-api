@@ -49,36 +49,44 @@ async fn home(
     #[cfg(feature = "third-party-login")]
     let host = req.connection_info().host().to_string();
     #[cfg(feature = "github-login")]
-    platforms.push({
-        let mut map = HashMap::new();
-        map.insert("name", Github.name());
-        map.insert("url", Github.login_url(host.clone(), state.clone()));
-        map
-    });
+    if env::var(env::ENV_GITHUB_APP_CLIENT_ID).is_ok() && env::var(env::ENV_GITHUB_APP_CLIENT_SECRET).is_ok() {
+        platforms.push({
+            let mut map = HashMap::new();
+            map.insert("name", Github.name());
+            map.insert("url", Github.login_url(host.clone(), state.clone()));
+            map
+        });
+    }
 
     #[cfg(feature = "gitlab-login")]
-    platforms.push({
-        let mut map = HashMap::new();
-        map.insert("name", GitLab.name());
-        map.insert("url", GitLab.login_url(host.clone(), state.clone()));
-        map
-    });
+    if env::var(env::ENV_GITLAB_APP_CLIENT_ID).is_ok() && env::var(env::ENV_GITLAB_APP_CLIENT_SECRET).is_ok() {
+        platforms.push({
+            let mut map = HashMap::new();
+            map.insert("name", GitLab.name());
+            map.insert("url", GitLab.login_url(host.clone(), state.clone()));
+            map
+        });
+    }
 
     #[cfg(feature = "google-login")]
-    platforms.push({
-        let mut map = HashMap::new();
-        map.insert("name", Google.name());
-        map.insert("url", Google.login_url(host.clone(), state.clone()));
-        map
-    });
+    if env::var(env::ENV_GOOGLE_APP_CLIENT_ID).is_ok() && env::var(env::ENV_GOOGLE_APP_CLIENT_SECRET).is_ok() {
+        platforms.push({
+            let mut map = HashMap::new();
+            map.insert("name", Google.name());
+            map.insert("url", Google.login_url(host.clone(), state.clone()));
+            map
+        });
+    }
 
     #[cfg(feature = "microsoft-login")]
-    platforms.push({
-        let mut map = HashMap::new();
-        map.insert("name", Microsoft.name());
-        map.insert("url", Microsoft.login_url(host, state.clone()));
-        map
-    });
+    if env::var(env::ENV_MICROSOFT_APP_CLIENT_ID).is_ok() && env::var(env::ENV_MICROSOFT_APP_CLIENT_SECRET).is_ok() {
+        platforms.push({
+            let mut map = HashMap::new();
+            map.insert("name", Microsoft.name());
+            map.insert("url", Microsoft.login_url(host, state.clone()));
+            map
+        });
+    }
 
     let mut context = tera::Context::new();
     context.insert("platforms", &platforms);
