@@ -76,6 +76,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare
+        id: prep
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          if [[ "$REF" == "refs/tags/v"* ]]; then
+            tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+            tag=${tag:1}
+          else
+            tag=$(git log -1 --format="%cd" --date=short | sed s/-//g)
+          fi
+          echo "TAG=$tag" >> $GITHUB_OUTPUT
+
       # Extract metadata (tags, labels) for Docker
       # https://github.com/docker/metadata-action
       - name: Extract Docker metadata
@@ -84,9 +97,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            ${{ matrix.db }}-${{ matrix.login && '-login' || '' }}-latest
-            ${{ matrix.db }}-${{ matrix.login && '-login' || '' }}-${{ github.sha }}
-            ${{ matrix.db }}-${{ matrix.login && '-login' || '' }}-${{ github.ref }}
+            ${{ matrix.db }}${{ matrix.login && '-login' || '' }}-latest
+            ${{ matrix.db }}${{ matrix.login && '-login' || '' }}-${{ steps.prep.outputs.TAG }}
 
 
       # Build and push Docker image with Buildx
@@ -101,7 +113,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: ${{ matrix.db == 'sqlite' && '--no-default-features -F sqlite-bundle' || '-F mysqlclient-static' }}${{ matrix.login && ' -F all-login' || '' }}
+          build-args: FEATURE_FLAGS=${{ matrix.db == 'sqlite' && '--no-default-features|-F|sqlite-bundle' || '-F|mysqlclient-static' }}|${{ matrix.login && '-F|all-login' || '' }}
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
