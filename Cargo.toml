@@ -15,6 +15,7 @@ google-login = ["third-party-login"]
 github-login = ["third-party-login"]
 gitlab-login = ["third-party-login"]
 microsoft-login = ["third-party-login"]
+all-login = ["google-login", "github-login", "gitlab-login", "microsoft-login"]
 
 [dev-dependencies]
 dotenvy = "0.15.6"
