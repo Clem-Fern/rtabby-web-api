@@ -20,7 +20,14 @@ impl LoginProvider for Google {
 
     fn login_url(&self, host: String, state: String) -> String {
         let client_id = env::var(env::ENV_GOOGLE_APP_CLIENT_ID).expect("Missing GOOGLE_APP_CLIENT_ID env var");
-        format!( "https://accounts.google.com/o/oauth2/v2/auth?client_id={}&redirect_uri={}://{}/login/google/callback&state={}&response_type=code&scope=https://www.googleapis.com/auth/userinfo.profile", client_id, tools::scheme(), host, state)
+        let params = vec![
+            ("client_id", client_id),
+            ("redirect_uri", format!("{}://{}/login/google/callback", tools::scheme(), host)),
+            ("state", state),
+            ("response_type", "code".to_string()),
+            ("scope", "https://www.googleapis.com/auth/userinfo.profile".to_string()),
+        ];
+        reqwest::Url::parse_with_params("https://accounts.google.com/o/oauth2/v2/auth", params).unwrap().to_string()
     }
 
     async fn user_info(&self, host: String, code: String) -> Result<ThirdPartyUserInfo, Error> {

@@ -20,7 +20,14 @@ impl LoginProvider for GitLab {
 
     fn login_url(&self, host: String, state: String) -> String {
         let client_id = env::var(env::ENV_GITLAB_APP_CLIENT_ID).expect("Missing GITLAB_APP_CLIENT_ID env var");
-        format!( "https://gitlab.com/oauth/authorize?client_id={}&redirect_uri={}://{}/login/gitlab/callback&state={}&scope=read_user&response_type=code", client_id, tools::scheme(), host, state)
+        let params = vec![
+            ("client_id", client_id),
+            ("state", state),
+            ("redirect_uri", format!("{}://{}/login/gitlab/callback", tools::scheme(), host)),
+            ("response_type", "code".to_string()),
+            ("scope", "read_user".to_string()),
+        ];
+        reqwest::Url::parse_with_params("https://gitlab.com/oauth/authorize", params).unwrap().to_string()
     }
 
     async fn user_info(&self, host: String, code: String) -> Result<ThirdPartyUserInfo, Error> {

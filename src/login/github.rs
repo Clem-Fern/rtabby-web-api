@@ -20,7 +20,12 @@ impl LoginProvider for Github {
 
     fn login_url(&self, host: String, state: String) -> String {
         let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
-        format!( "https://github.com/login/oauth/authorize?client_id={}&redirect_uri={}://{}/login/github/callback&state={}", client_id, tools::scheme(), host, state)
+        let params = vec![
+            ("client_id", client_id),
+            ("state", state),
+            ("redirect_uri", format!("{}://{}/login/github/callback", tools::scheme(), host)),
+        ];
+        reqwest::Url::parse_with_params("https://github.com/login/oauth/authorize", params).unwrap().to_string()
     }
 
     async fn user_info(&self, _host: String, code: String) -> Result<ThirdPartyUserInfo, Error> {
