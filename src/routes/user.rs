@@ -4,7 +4,7 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 use crate::app_config::MappedAppConfig;
 
 #[cfg(feature = "third-party-login")]
-use crate::models::user::User;
+use crate::login::models::User;
 use crate::storage::DbPool;
 
 #[allow(unused_variables)]

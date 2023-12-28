@@ -23,11 +23,11 @@ extern crate serde_yaml;
 extern crate actix_web;
 use actix_web::{middleware, web, App, HttpServer};
 #[cfg(feature = "third-party-login")]
-use actix_files as fs;
-#[cfg(feature = "third-party-login")]
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
 #[cfg(feature = "third-party-login")]
 use actix_web::cookie::Key;
+#[cfg(feature = "third-party-login")]
+use login::services::{login_config, static_files_config};
 
 extern crate actix_web_httpauth;
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -101,7 +101,7 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
         {
             let secret_key = Key::generate();
             app.wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key))
-            .service(routes::login::home)
+            .service(login::routes::home)
             .configure(login_config)
             .configure(static_files_config)
         }
@@ -151,16 +151,4 @@ fn api_v1_config(cfg: &mut web::ServiceConfig) {
         // AUTH
         .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator))
     );
-}
-
-#[cfg(feature = "third-party-login")]
-fn login_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(web::scope("/"))
-    .configure(routes::login::user_login_route_config)
-    ;
-}
-
-#[cfg(feature = "third-party-login")]
-fn static_files_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(fs::Files::new("/static", env::static_files_base_dir() + "static"));
 }

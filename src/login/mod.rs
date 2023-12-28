@@ -1,12 +1,6 @@
-#[cfg(feature = "github-login")]
-pub mod github;
-#[cfg(feature = "gitlab-login")]
-pub mod gitlab;
-#[cfg(feature = "google-login")]
-pub mod google;
-#[cfg(feature = "microsoft-login")]
-pub mod microsoft;
-#[cfg(feature = "third-party-login")]
+mod tools;
+pub mod providers;
 pub mod provider;
-#[cfg(feature = "third-party-login")]
-pub mod tools;
+pub mod services;
+pub mod routes;
+pub mod models;

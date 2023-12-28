@@ -5,7 +5,7 @@ use crate::app_config::MappedAppConfig;
 #[cfg(feature = "third-party-login")]
 use crate::storage::DbPool;
 #[cfg(feature = "third-party-login")]
-use crate::models::user::User;
+use crate::login::models::User;
 
 pub async fn bearer_auth_validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     let default = web::Data::new(MappedAppConfig::default());
