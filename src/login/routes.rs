@@ -20,7 +20,8 @@ use log::{info, error};
 
 use crate::login::models::{User, NewUser};
 
-use crate::env;
+use crate::login::env;
+use crate::env as app_;
 
 use uuid::Uuid;
 
@@ -46,7 +47,7 @@ async fn home(
 
     let host = req.connection_info().host().to_string();
     #[cfg(feature = "github-login")]
-    if env::var(env::ENV_GITHUB_APP_CLIENT_ID).is_ok() && env::var(env::ENV_GITHUB_APP_CLIENT_SECRET).is_ok() {
+    if app_::var(env::ENV_GITHUB_APP_CLIENT_ID).is_ok() && app_::var(env::ENV_GITHUB_APP_CLIENT_SECRET).is_ok() {
         platforms.push({
             let mut map = HashMap::new();
             map.insert("name", Github.name());
@@ -56,7 +57,7 @@ async fn home(
     }
 
     #[cfg(feature = "gitlab-login")]
-    if env::var(env::ENV_GITLAB_APP_CLIENT_ID).is_ok() && env::var(env::ENV_GITLAB_APP_CLIENT_SECRET).is_ok() {
+    if app_::var(env::ENV_GITLAB_APP_CLIENT_ID).is_ok() && app_::var(env::ENV_GITLAB_APP_CLIENT_SECRET).is_ok() {
         platforms.push({
             let mut map = HashMap::new();
             map.insert("name", GitLab.name());
@@ -66,7 +67,7 @@ async fn home(
     }
 
     #[cfg(feature = "google-login")]
-    if env::var(env::ENV_GOOGLE_APP_CLIENT_ID).is_ok() && env::var(env::ENV_GOOGLE_APP_CLIENT_SECRET).is_ok() {
+    if app_::var(env::ENV_GOOGLE_APP_CLIENT_ID).is_ok() && app_::var(env::ENV_GOOGLE_APP_CLIENT_SECRET).is_ok() {
         platforms.push({
             let mut map = HashMap::new();
             map.insert("name", Google.name());
@@ -76,7 +77,7 @@ async fn home(
     }
 
     #[cfg(feature = "microsoft-login")]
-    if env::var(env::ENV_MICROSOFT_APP_CLIENT_ID).is_ok() && env::var(env::ENV_MICROSOFT_APP_CLIENT_SECRET).is_ok() {
+    if app_::var(env::ENV_MICROSOFT_APP_CLIENT_ID).is_ok() && app_::var(env::ENV_MICROSOFT_APP_CLIENT_SECRET).is_ok() {
         platforms.push({
             let mut map = HashMap::new();
             map.insert("name", Microsoft.name());

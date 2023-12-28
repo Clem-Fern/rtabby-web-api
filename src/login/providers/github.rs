@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use crate::login::providers::{LoginProvider, ThirdPartyUserInfo};
 use crate::login::tools;
 use actix_web::Error;
-use crate::env;
+use crate::login::env;
+use crate::env as app_;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -20,7 +21,7 @@ impl LoginProvider for Github {
     }
 
     fn login_url(&self, host: String, state: String) -> String {
-        let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
+        let client_id = app_::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
         let params = vec![
             ("client_id", client_id),
             ("state", state),
@@ -30,8 +31,8 @@ impl LoginProvider for Github {
     }
 
     async fn user_info(&self, _host: String, code: String) -> Result<ThirdPartyUserInfo, Error> {
-        let client_id = env::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
-        let client_secret = env::var(env::ENV_GITHUB_APP_CLIENT_SECRET).expect("Missing GITHUB_APP_CLIENT_SECRET env var");
+        let client_id = app_::var(env::ENV_GITHUB_APP_CLIENT_ID).expect("Missing GITHUB_APP_CLIENT_ID env var");
+        let client_secret = app_::var(env::ENV_GITHUB_APP_CLIENT_SECRET).expect("Missing GITHUB_APP_CLIENT_SECRET env var");
         let token = Self.get_access_token("https://github.com/login/oauth/access_token".to_string(), code, client_id, client_secret, "authorization_code".to_string(), None).await.unwrap();
         let user_info = Self.get_user_info("https://api.github.com/user", token).await.unwrap().json::<UserInfo>().await.unwrap();
         Ok(ThirdPartyUserInfo {

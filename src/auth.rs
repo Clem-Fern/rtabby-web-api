@@ -2,10 +2,12 @@ use actix_web::{web, dev::ServiceRequest, Error, error::ErrorUnauthorized};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::warn;
 use crate::app_config::MappedAppConfig;
-#[cfg(feature = "third-party-login")]
-use crate::storage::DbPool;
-#[cfg(feature = "third-party-login")]
-use crate::login::models::User;
+cfg_if! {
+    if #[cfg(feature = "third-party-login")] {
+        use crate::storage::DbPool;
+        use crate::login::models::User;
+    }
+}
 
 pub async fn bearer_auth_validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, (Error, ServiceRequest)> {
     let default = web::Data::new(MappedAppConfig::default());

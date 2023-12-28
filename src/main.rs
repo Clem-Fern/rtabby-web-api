@@ -15,19 +15,23 @@ mod auth;
 mod models;
 mod routes;
 mod schema;
-#[cfg(feature = "third-party-login")]
-mod login;
 
 extern crate serde_yaml;
 
 extern crate actix_web;
 use actix_web::{middleware, web, App, HttpServer};
-#[cfg(feature = "third-party-login")]
-use actix_session::{SessionMiddleware, storage::CookieSessionStore};
-#[cfg(feature = "third-party-login")]
-use actix_web::cookie::Key;
-#[cfg(feature = "third-party-login")]
-use login::services::{login_config, static_files_config};
+
+#[macro_use]
+extern crate cfg_if;
+
+cfg_if! {
+    if #[cfg(feature = "third-party-login")] {
+        mod login;
+        use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+        use actix_web::cookie::Key;
+        use login::services::{login_config, static_files_config};
+    }
+}
 
 extern crate actix_web_httpauth;
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -97,17 +101,18 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
             .app_data(web::Data::new(pool.clone())) // Database Pool Data
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
             .configure(api_v1_config);
-        #[cfg(feature = "third-party-login")]
-        {
-            let secret_key = Key::generate();
-            app.wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key))
-            .service(login::routes::home)
-            .configure(login_config)
-            .configure(static_files_config)
-        }
-        #[cfg(not(feature = "third-party-login"))]
-        {
-            return app;
+
+        cfg_if! {
+            if #[cfg(feature = "third-party-login")] {
+                let secret_key = Key::generate();
+                app.wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key))
+                .service(login::routes::home)
+                .configure(login_config)
+                .configure(static_files_config)
+            }
+            else {
+                app
+            }
         }
     });
 

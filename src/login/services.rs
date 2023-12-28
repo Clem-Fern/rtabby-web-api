@@ -1,7 +1,7 @@
 
 use actix_files as fs;
 use actix_web::web;
-use crate::env;
+use crate::login::env;
 use crate::login::routes;
 
 pub fn login_config(cfg: &mut web::ServiceConfig) {
