@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use crate::{login::provider::{LoginProvider, ThirdPartyUserInfo}, login::tools};
+use crate::{login::providers::{LoginProvider, ThirdPartyUserInfo}, login::tools};
 use actix_web::Error;
 use crate::env;
 use serde::Deserialize;

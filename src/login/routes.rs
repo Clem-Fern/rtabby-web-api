@@ -13,8 +13,8 @@ use crate::login::providers::gitlab::GitLab;
 use crate::login::providers::google::Google;
 #[cfg(feature = "microsoft-login")]
 use crate::login::providers::microsoft::Microsoft;
-use crate::login::provider::ThirdPartyUserInfo;
-use crate::login::provider::LoginProvider;
+use crate::login::providers::ThirdPartyUserInfo;
+use crate::login::providers::LoginProvider;
 use crate::storage::DbPool;
 use log::{info, error};
 
