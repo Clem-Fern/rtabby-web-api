@@ -50,8 +50,20 @@ body {
   .copy-btn {
     background-color: #5bc0de;
     margin-left: 10px;
+    width: 100px;
+  }
+
+  .logout-btn {
+    margin-left: 10px;
+    width: 100px;
+    background-color: #e74c3c; /* 红色系，可以根据需要选择其他颜色 */
+    color: #fff; /* 文本颜色，白色在深色背景上通常更易读 */
   }
   
+  .logout-btn:hover {
+    background-color: #c0392b; /* 鼠标悬停时的背景颜色，可以选择稍深的色调 */
+  }
+
   .error-container {
     color: #a94442;
   }
