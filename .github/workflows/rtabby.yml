@@ -99,6 +99,7 @@ jobs:
           tags: |
             ${{ matrix.db }}${{ matrix.login && '-login' || '' }}-latest
             ${{ matrix.db }}${{ matrix.login && '-login' || '' }}-${{ steps.prep.outputs.TAG }}
+            ${{ matrix.db == 'mysql' && !matrix.login && 'latest' || '' }}
 
 
       # Build and push Docker image with Buildx
