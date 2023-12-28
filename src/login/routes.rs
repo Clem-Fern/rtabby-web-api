@@ -94,7 +94,6 @@ async fn home(
     .body(body);
     let ret = resp.add_cookie(&actix_web::cookie::Cookie::build("state", &state)
     .path("/")
-    .http_only(true)
     .expires(actix_web::cookie::time::OffsetDateTime::now_utc() + actix_web::cookie::time::Duration::minutes(5))
     .finish());
     if let Err(err) = ret {
@@ -217,7 +216,6 @@ async fn login_callback(
         .append_header(("Location","/"))
         .cookie(actix_web::cookie::Cookie::build("token", &current_user_token)
         .path("/")
-        .http_only(true)
         .finish())
         .finish();
         Ok(redirect)
