@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use actix_web::{get, web, Error, HttpResponse, HttpRequest};
+use actix_web::http::header::ContentType;
 
 use tera::Tera;
 use serde::Deserialize;
@@ -39,7 +40,9 @@ async fn home(
         let mut context = tera::Context::new();
         context.insert("token", &token.value());
         let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("success.html", &context).unwrap();
-        return Ok(HttpResponse::Ok().body(body));
+        return Ok(HttpResponse::build(actix_web::http::StatusCode::OK)
+        .content_type(ContentType::html())
+        .body(body))
     }
     let state = Uuid::new_v4().to_string();
     
@@ -91,6 +94,7 @@ async fn home(
     let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("login.html", &context).unwrap();
 
     let mut resp = HttpResponse::Ok()
+    .content_type(ContentType::html())
     .body(body);
     let ret = resp.add_cookie(&actix_web::cookie::Cookie::build("state", &state)
     .path("/")
