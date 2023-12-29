@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM rust:1.73-alpine AS builder
-ARG FEATURE_FLAGS="-F mysqlclient-static -F github-login"
+ARG FEATURE_FLAGS="-F|mysqlclient-static|-F|github-login"
 WORKDIR /build
 COPY . .
 RUN if [[ "$FEATURE_FLAGS" == *"mysqlclient-static"* ]]; then \
@@ -27,6 +27,7 @@ RUN if [[ "$FEATURE_FLAGS" == *"login"* ]]; then \
 RUN cargo build --target=x86_64-unknown-linux-musl --release $(echo "$FEATURE_FLAGS" | sed 's/|/ /g')
 
 FROM scratch
+ARG GIT_COMMIT
 
 WORKDIR /config
 
@@ -34,5 +35,6 @@ COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/rtabby-web-a
 COPY --from=builder /build/users.exemple.yml .
 COPY --from=builder /build/web/ /www/web/
 ENV STATIC_FILES_BASE_DIR=/www/web/
+ENV GIT_COMMIT=$GIT_COMMIT
 
 CMD ["/rtabby-web-api"]

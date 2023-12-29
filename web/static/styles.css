@@ -68,3 +68,7 @@ body {
     color: #a94442;
   }
   
+  .version {
+    margin-top: 20px;
+    color: #ccc;
+  }

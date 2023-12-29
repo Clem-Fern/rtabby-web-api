@@ -39,6 +39,13 @@ async fn home(
     if let Some(token) = req.cookie("token") {
         let mut context = tera::Context::new();
         context.insert("token", &token.value());
+        let version = env!("CARGO_PKG_VERSION");
+        if let Ok(hash) = app_::var("GIT_COMMIT") {
+            context.insert("version", &format!("{} ({})", version, hash));
+        }
+        else {
+            context.insert("version", &version);
+        }
         let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("success.html", &context).unwrap();
         return Ok(HttpResponse::build(actix_web::http::StatusCode::OK)
         .content_type(ContentType::html())
@@ -91,6 +98,13 @@ async fn home(
 
     let mut context = tera::Context::new();
     context.insert("platforms", &platforms);
+    let version = env!("CARGO_PKG_VERSION");
+    if let Ok(hash) = app_::var("GIT_COMMIT") {
+        context.insert("version", &format!("{} ({})", version, hash));
+    }
+    else {
+        context.insert("version", &version);
+    }
     let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("login.html", &context).unwrap();
 
     let mut resp = HttpResponse::Ok()
