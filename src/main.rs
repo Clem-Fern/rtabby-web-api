@@ -21,6 +21,18 @@ extern crate serde_yaml;
 extern crate actix_web;
 use actix_web::{middleware, web, App, HttpServer};
 
+#[macro_use]
+extern crate cfg_if;
+
+cfg_if! {
+    if #[cfg(feature = "third-party-login")] {
+        mod login;
+        use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+        use actix_web::cookie::Key;
+        use login::services::{login_config, static_files_config};
+    }
+}
+
 extern crate actix_web_httpauth;
 use actix_web_httpauth::middleware::HttpAuthentication;
 
@@ -28,6 +40,13 @@ mod tls;
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    #[cfg(feature = "third-party-login")]
+    {
+        #[cfg(not(any(feature = "github-login", feature = "gitlab-login", feature = "google-login", feature = "microsoft-login")))]
+        {
+            compile_error!("You must enable at least one login provider feature to use the login feature.");
+        }
+    }
     // INITIALIZE LOGGING
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(
         if cfg!(debug_assertions) {
@@ -76,16 +95,25 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
 
     let pool = storage.pool()?;
-
     let mut server = HttpServer::new(move || {
-        App::new()
+        let app = App::new()
             .app_data(web::Data::new(config.clone())) // App Config Data
             .app_data(web::Data::new(pool.clone())) // Database Pool Data
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
-            // AUTH
-            .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator))
-            //
-            .configure(api_v1_config)
+            .configure(api_v1_config);
+
+        cfg_if! {
+            if #[cfg(feature = "third-party-login")] {
+                let secret_key = Key::generate();
+                app.wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key))
+                .service(login::routes::home)
+                .configure(login_config)
+                .configure(static_files_config)
+            }
+            else {
+                app
+            }
+        }
     });
 
     // socket var
@@ -124,6 +152,8 @@ fn api_v1_config(cfg: &mut web::ServiceConfig) {
             web::scope("/1")
                 .configure(routes::user::user_route_config) // USER ROUTE
                 .configure(routes::config::config_route_config),
-        ),
+        )
+        // AUTH
+        .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator))
     );
 }

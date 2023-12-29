@@ -2,7 +2,7 @@ use serde::{de, Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct User {
+pub struct LocalUser {
     pub name: String,
     #[serde(deserialize_with = "uuid_validator")]
     pub token: String,
@@ -13,15 +13,15 @@ pub struct UserWithoutToken {
     pub name: String,
 }
 
-impl From<User> for UserWithoutToken {
-    fn from(user: User) -> Self {
+impl From<LocalUser> for UserWithoutToken {
+    fn from(user: LocalUser) -> Self {
         UserWithoutToken {
             name: user.name,
         }
     }
 }
 
-fn uuid_validator<'de, D>(d: D) -> Result<String, D::Error>
+pub fn uuid_validator<'de, D>(d: D) -> Result<String, D::Error>
 where
     D: de::Deserializer<'de>,
 {

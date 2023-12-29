@@ -1,12 +1,44 @@
 services:
-  rtabby:
-    container_name: rtabby-web-api
-    #build: .
-    image: ghcr.io/clem-fern/rtabby-web-api
+  rtabby-sqlite:
+    container_name: rtabby-web-api-sqlite
+    build:
+      context: .
+      args:
+        - FEATURE_FLAGS=--no-default-features|-F|sqlite-bundle|-F|github-login|-F|gitlab-login
+        - GIT_COMMIT=${GIT_COMMIT}
+    # image: ghcr.io/clem-fern/rtabby-web-api:sqlite-latest
 
     # If running as root, setup your user/volume owner UID and GID
     #user: "1000:1000"
 
+    cap_add:		
+      - "CAP_DAC_OVERRIDE"
+    cap_drop: ['ALL']
+    read_only: true
+
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./config:/config
+    networks:
+      - frontend
+
+  rtabby:
+    container_name: rtabby-web-api
+    build:
+      context: .
+      args:
+        - FEATURE_FLAGS=-F|mysqlclient-static|-F|github-login
+        - GIT_COMMIT=${GIT_COMMIT}
+    # image: ghcr.io/clem-fern/rtabby-web-api:mysql-latest
+
+    # If running as root, setup your user/volume owner UID and GID
+    #user: "1000:1000"
+
+    env_file:
+      - .env
     cap_add:		
       - "CAP_DAC_OVERRIDE"
     cap_drop: ['ALL']

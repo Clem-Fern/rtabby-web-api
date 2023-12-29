@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tabby - Login To Get Sync Token</title>
+  <link rel="stylesheet" href="static/styles.css">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.svg">
+</head>
+<body>
+
+<div class="container">
+  <h1>Login to get sync token</h1>
+  {% for platform in platforms %}
+  <a href="{{ platform.url }}" class="btn">Login with {{ platform.name }}</a>
+</br>
+  {% endfor %}
+  <br>
+  <br>
+<div class="version">{{ version }}</div>
+</div>
+
+</body>
+</html>
