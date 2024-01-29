@@ -7,13 +7,14 @@ use tera::Tera;
 use serde::Deserialize;
 
 #[cfg(feature = "github-login")]
-use crate::login::providers::github::Github;
+use crate::login::providers::{github, github::Github};
 #[cfg(feature = "gitlab-login")]
-use crate::login::providers::gitlab::GitLab;
+use crate::login::providers::{gitlab, gitlab::GitLab};
 #[cfg(feature = "google-login")]
-use crate::login::providers::google::Google;
+use crate::login::providers::{google, google::Google};
 #[cfg(feature = "microsoft-login")]
-use crate::login::providers::microsoft::Microsoft;
+use crate::login::providers::{microsoft, microsoft::Microsoft};
+
 use crate::login::providers::ThirdPartyUserInfo;
 use crate::login::providers::LoginProvider;
 use crate::storage::DbPool;
@@ -56,8 +57,9 @@ async fn home(
     let mut platforms = Vec::<HashMap::<&str, String>>::new();
 
     let host = req.connection_info().host().to_string();
+
     #[cfg(feature = "github-login")]
-    if app_::var(env::ENV_GITHUB_APP_CLIENT_ID).is_ok() && app_::var(env::ENV_GITHUB_APP_CLIENT_SECRET).is_ok() {
+    if app_::var(github::env::ENV_GITHUB_APP_CLIENT_ID).is_ok() && app_::var(github::env::ENV_GITHUB_APP_CLIENT_SECRET).is_ok() {
         platforms.push({
             let mut map = HashMap::new();
             map.insert("name", Github.name());
@@ -67,7 +69,7 @@ async fn home(
     }
 
     #[cfg(feature = "gitlab-login")]
-    if app_::var(env::ENV_GITLAB_APP_CLIENT_ID).is_ok() && app_::var(env::ENV_GITLAB_APP_CLIENT_SECRET).is_ok() {
+    if app_::var(gitlab::env::ENV_GITLAB_APP_CLIENT_ID).is_ok() && app_::var(gitlab::env::ENV_GITLAB_APP_CLIENT_SECRET).is_ok() {
         platforms.push({
             let mut map = HashMap::new();
             map.insert("name", GitLab.name());
@@ -77,7 +79,7 @@ async fn home(
     }
 
     #[cfg(feature = "google-login")]
-    if app_::var(env::ENV_GOOGLE_APP_CLIENT_ID).is_ok() && app_::var(env::ENV_GOOGLE_APP_CLIENT_SECRET).is_ok() {
+    if app_::var(google::env::ENV_GOOGLE_APP_CLIENT_ID).is_ok() && app_::var(google::env::ENV_GOOGLE_APP_CLIENT_SECRET).is_ok() {
         platforms.push({
             let mut map = HashMap::new();
             map.insert("name", Google.name());
@@ -87,7 +89,7 @@ async fn home(
     }
 
     #[cfg(feature = "microsoft-login")]
-    if app_::var(env::ENV_MICROSOFT_APP_CLIENT_ID).is_ok() && app_::var(env::ENV_MICROSOFT_APP_CLIENT_SECRET).is_ok() {
+    if app_::var(microsoft::env::ENV_MICROSOFT_APP_CLIENT_ID).is_ok() && app_::var(microsoft::env::ENV_MICROSOFT_APP_CLIENT_SECRET).is_ok() {
         platforms.push({
             let mut map = HashMap::new();
             map.insert("name", Microsoft.name());
