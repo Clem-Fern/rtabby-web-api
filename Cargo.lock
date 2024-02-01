@@ -1701,7 +1701,6 @@ dependencies = [
  "actix-web",
  "actix-web-httpauth",
  "async-trait",
- "cfg-if",
  "chrono",
  "diesel",
  "diesel_migrations",

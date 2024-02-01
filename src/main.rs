@@ -21,17 +21,8 @@ extern crate serde_yaml;
 extern crate actix_web;
 use actix_web::{middleware, web, App, HttpServer};
 
-#[macro_use]
-extern crate cfg_if;
-
-cfg_if! {
-    if #[cfg(feature = "third-party-login")] {
-        mod login;
-        use actix_session::{SessionMiddleware, storage::CookieSessionStore};
-        use actix_web::cookie::Key;
-        use login::services::{login_config, static_files_config};
-    }
-}
+#[cfg(feature = "third-party-login")]
+mod login;
 
 extern crate actix_web_httpauth;
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -40,6 +31,8 @@ mod tls;
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+
+    // third-party-login should only be enable by one of the features below (github-login, gitlab-login, google-login, microsoft-login)
     #[cfg(feature = "third-party-login")]
     {
         #[cfg(not(any(feature = "github-login", feature = "gitlab-login", feature = "google-login", feature = "microsoft-login")))]
@@ -47,6 +40,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             compile_error!("You must enable at least one login provider feature to use the login feature.");
         }
     }
+
     // INITIALIZE LOGGING
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(
         if cfg!(debug_assertions) {
@@ -93,6 +87,11 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
         storage.cleanup(&config)?;
     }
 
+    #[cfg(feature = "third-party-login")]
+    let providers_config: login::ProvidersConfig = login::get_provider_config();
+
+    #[cfg(feature = "third-party-login")]
+    info!("Third party login enabled: {} providers found.", providers_config.available_providers.len());
 
     let pool = storage.pool()?;
     let mut server = HttpServer::new(move || {
@@ -102,18 +101,15 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
             .wrap(middleware::Logger::default().log_target(env!("CARGO_PKG_NAME").to_string()))
             .configure(api_v1_config);
 
-        cfg_if! {
-            if #[cfg(feature = "third-party-login")] {
-                let secret_key = Key::generate();
-                app.wrap(SessionMiddleware::new(CookieSessionStore::default(), secret_key))
-                .service(login::routes::home)
-                .configure(login_config)
-                .configure(static_files_config)
-            }
-            else {
-                app
-            }
+        #[cfg(feature = "third-party-login")]
+        if !providers_config.available_providers.is_empty() {
+            return app.app_data(web::Data::new(providers_config.clone()))
+                .configure(login::services::login_config);
         }
+        
+        #[allow(clippy::let_and_return)]
+        app
+
     });
 
     // socket var

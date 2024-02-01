@@ -107,7 +107,7 @@ impl TLSConfigBuilder {
             )));
         }
 
-        self.key = Some(keys.get(0).unwrap().to_owned());
+        self.key = Some(keys.first().unwrap().to_owned());
 
         Ok(self)
     }

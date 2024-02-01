@@ -1,29 +1,19 @@
-use std::collections::HashMap;
-
-use actix_web::{get, web, Error, HttpResponse, HttpRequest};
 use actix_web::http::header::ContentType;
+use actix_web::{get, web, Error, HttpRequest, HttpResponse};
 
-use tera::Tera;
 use serde::Deserialize;
+use tera::Tera;
 
-#[cfg(feature = "github-login")]
-use crate::login::providers::{github, github::Github};
-#[cfg(feature = "gitlab-login")]
-use crate::login::providers::{gitlab, gitlab::GitLab};
-#[cfg(feature = "google-login")]
-use crate::login::providers::{google, google::Google};
-#[cfg(feature = "microsoft-login")]
-use crate::login::providers::{microsoft, microsoft::Microsoft};
-
-use crate::login::providers::ThirdPartyUserInfo;
-use crate::login::providers::LoginProvider;
+use crate::login::error::ProviderError;
+use crate::login::providers::Platform;
+use crate::login::ProvidersConfig;
 use crate::storage::DbPool;
-use log::{info, error};
+use log::{error, info};
 
-use crate::login::models::{User, NewUser};
+use crate::login::models::{NewUser, User};
 
-use crate::login::env;
 use crate::env as app_;
+use crate::login::env;
 
 use uuid::Uuid;
 
@@ -33,9 +23,10 @@ pub struct Params {
     state: String,
 }
 
-#[get("/")]
+#[get("")]
 async fn home(
     req: HttpRequest,
+    providers_config: web::Data<ProvidersConfig>,
 ) -> Result<HttpResponse, Error> {
     if let Some(token) = req.cookie("token") {
         let mut context = tera::Context::new();
@@ -43,219 +34,173 @@ async fn home(
         let version = env!("CARGO_PKG_VERSION");
         if let Ok(hash) = app_::var("GIT_COMMIT") {
             context.insert("version", &format!("{} ({})", version, hash));
-        }
-        else {
+        } else {
             context.insert("version", &version);
         }
-        let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("success.html", &context).unwrap();
+        let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*"))
+            .map_err(actix_web::error::ErrorInternalServerError)?
+            .render("success.html", &context)
+            .map_err(actix_web::error::ErrorInternalServerError)?;
         return Ok(HttpResponse::build(actix_web::http::StatusCode::OK)
-        .content_type(ContentType::html())
-        .body(body))
-    }
-    let state = Uuid::new_v4().to_string();
-    
-    let mut platforms = Vec::<HashMap::<&str, String>>::new();
-
-    let host = req.connection_info().host().to_string();
-
-    #[cfg(feature = "github-login")]
-    if app_::var(github::env::ENV_GITHUB_APP_CLIENT_ID).is_ok() && app_::var(github::env::ENV_GITHUB_APP_CLIENT_SECRET).is_ok() {
-        platforms.push({
-            let mut map = HashMap::new();
-            map.insert("name", Github.name());
-            map.insert("url", Github.login_url(host.clone(), state.clone()));
-            map
-        });
+            .content_type(ContentType::html())
+            .body(body));
     }
 
-    #[cfg(feature = "gitlab-login")]
-    if app_::var(gitlab::env::ENV_GITLAB_APP_CLIENT_ID).is_ok() && app_::var(gitlab::env::ENV_GITLAB_APP_CLIENT_SECRET).is_ok() {
-        platforms.push({
-            let mut map = HashMap::new();
-            map.insert("name", GitLab.name());
-            map.insert("url", GitLab.login_url(host.clone(), state.clone()));
-            map
-        });
-    }
-
-    #[cfg(feature = "google-login")]
-    if app_::var(google::env::ENV_GOOGLE_APP_CLIENT_ID).is_ok() && app_::var(google::env::ENV_GOOGLE_APP_CLIENT_SECRET).is_ok() {
-        platforms.push({
-            let mut map = HashMap::new();
-            map.insert("name", Google.name());
-            map.insert("url", Google.login_url(host.clone(), state.clone()));
-            map
-        });
-    }
-
-    #[cfg(feature = "microsoft-login")]
-    if app_::var(microsoft::env::ENV_MICROSOFT_APP_CLIENT_ID).is_ok() && app_::var(microsoft::env::ENV_MICROSOFT_APP_CLIENT_SECRET).is_ok() {
-        platforms.push({
-            let mut map = HashMap::new();
-            map.insert("name", Microsoft.name());
-            map.insert("url", Microsoft.login_url(host, state.clone()));
-            map
-        });
-    }
+    let platforms: Vec<Platform> = providers_config
+        .available_providers
+        .clone()
+        .into_iter()
+        .map(|p| p.into())
+        .collect();
 
     let mut context = tera::Context::new();
     context.insert("platforms", &platforms);
     let version = env!("CARGO_PKG_VERSION");
     if let Ok(hash) = app_::var("GIT_COMMIT") {
         context.insert("version", &format!("{} ({})", version, hash));
-    }
-    else {
+    } else {
         context.insert("version", &version);
     }
-    let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*")).unwrap().render("login.html", &context).unwrap();
+    let body = Tera::new(&(env::static_files_base_dir() + "templates/**/*"))
+        .map_err(actix_web::error::ErrorInternalServerError)?
+        .render("login.html", &context)
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    let mut resp = HttpResponse::Ok()
-    .content_type(ContentType::html())
-    .body(body);
-    let ret = resp.add_cookie(&actix_web::cookie::Cookie::build("state", &state)
-    .path("/")
-    .expires(actix_web::cookie::time::OffsetDateTime::now_utc() + actix_web::cookie::time::Duration::minutes(5))
-    .finish());
+    Ok(HttpResponse::Ok()
+        .content_type(ContentType::html())
+        .body(body))
+}
+
+#[get("/{login}")]
+async fn login(
+    provider_name: web::Path<String>,
+    providers_config: web::Data<ProvidersConfig>,
+    req: HttpRequest,
+) -> Result<HttpResponse, Error> {
+    let provider_name = provider_name.into_inner();
+    let provider = providers_config
+        .available_providers
+        .clone()
+        .into_iter()
+        .find(|p| p.name().eq(&provider_name))
+        .ok_or(ProviderError::NotFound(provider_name))
+        .map_err(actix_web::error::ErrorBadRequest)?;
+
+    let host = req.connection_info().host().to_string();
+    let state = Uuid::new_v4().to_string();
+
+    let login_url = provider.get_login_url(host, state.clone());
+
+    let mut response = HttpResponse::TemporaryRedirect()
+        .append_header(("Location", login_url))
+        .finish();
+
+    let ret = response.add_cookie(
+        &actix_web::cookie::Cookie::build("state", &state)
+            .path("/")
+            .expires(
+                actix_web::cookie::time::OffsetDateTime::now_utc()
+                    + actix_web::cookie::time::Duration::minutes(5),
+            )
+            .finish(),
+    );
+
     if let Err(err) = ret {
         error!("add cookie failed: {}", err);
         return Ok(HttpResponse::InternalServerError().finish());
     }
-    Ok(resp)
+    Ok(response)
 }
 
-#[cfg(feature = "microsoft-login")]
-#[get("/login/microsoft/callback")]
-async fn login_microsoft_callback(
-    info: web::Query<Params>,
-    pool: web::Data<DbPool>,
-    req: HttpRequest,
-) -> Result<HttpResponse, Error> {
-    let host = req.connection_info().host().to_string();
-    let user_info = Microsoft.user_info(host, info.code.clone()).await;
-    login_callback(info, pool, req, user_info).await
-}
-
-#[cfg(feature = "google-login")]
-#[get("/login/google/callback")]
-async fn login_google_callback(
-    info: web::Query<Params>,
-    pool: web::Data<DbPool>,
-    req: HttpRequest,
-) -> Result<HttpResponse, Error> {
-    let host = req.connection_info().host().to_string();
-    let user_info = Google.user_info(host, info.code.clone()).await;
-    login_callback(info, pool, req, user_info).await
-}
-
-#[cfg(feature = "github-login")]
-#[get("/login/github/callback")]
-async fn login_github_callback(
-    info: web::Query<Params>,
-    pool: web::Data<DbPool>,
-    req: HttpRequest,
-) -> Result<HttpResponse, Error> {
-    let host = req.connection_info().host().to_string();
-    let user_info = Github.user_info(host, info.code.clone()).await;
-    login_callback(info, pool, req, user_info).await
-}
-
-#[cfg(feature = "gitlab-login")]
-#[get("/login/gitlab/callback")]
-async fn login_gitlab_callback(
-    info: web::Query<Params>,
-    pool: web::Data<DbPool>,
-    req: HttpRequest,
-) -> Result<HttpResponse, Error> {
-    let host = req.connection_info().host().to_string();
-    let user_info = GitLab.user_info(host, info.code.clone()).await;
-    login_callback(info, pool, req, user_info).await
-}
-
+#[get("/{login}/callback")]
 async fn login_callback(
+    provider_name: web::Path<String>,
+    providers_config: web::Data<ProvidersConfig>,
     info: web::Query<Params>,
     pool: web::Data<DbPool>,
     req: HttpRequest,
-    user_info: Result<ThirdPartyUserInfo, Error>
 ) -> Result<HttpResponse, Error> {
-    if let Some(state) =  req.cookie("state") {
+    let provider_name = provider_name.into_inner();
+    let provider = providers_config
+        .available_providers
+        .clone()
+        .into_iter()
+        .find(|p| p.name().eq(&provider_name))
+        .ok_or(ProviderError::NotFound(provider_name))
+        .map_err(actix_web::error::ErrorBadRequest)?;
+
+    if let Some(state) = req.cookie("state") {
         if state.value() != info.state {
             error!("state not match");
             let rediret = HttpResponse::Found()
-            .append_header(("Location","/"))
-            .finish();
+                .append_header(("Location", "/"))
+                .finish();
             return Ok(rediret);
         }
-    }
-    else {
+    } else {
         error!("state not found");
         let rediret = HttpResponse::Found()
-        .append_header(("Location","/"))
-        .finish();
+            .append_header(("Location", "/login"))
+            .finish();
         return Ok(rediret);
     }
 
-    if let Ok(user) = user_info {
-        info!("user id: {}", user.id);
-        let mut context = tera::Context::new();
+    let host = req.connection_info().host().to_string();
 
-        let clone_pool = pool.clone();
-        let mid = user.id.clone();
-        let mplatform = user.platform.clone();
-        let current_user = web::block(move || {
-            let mut conn = clone_pool.get()?;
-            User::get_user(&mut conn, &mid, &mplatform)
-        }).await.map_err(actix_web::error::ErrorInternalServerError)?;
+    let user_info = provider
+        .get_user_info(host, info.code.clone())
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
 
-        let current_user_token: String;
-        if let Ok(Some(current_user)) = current_user {
-            current_user_token = current_user.token;
-            context.insert("token", &current_user_token);
-            
-        }
-        else {
-            let new_uuid = Uuid::new_v4().to_string();
-            let new_user = NewUser {
-                name: user.name,
-                user_id: user.id,
-                platform: user.platform.to_lowercase(),
-                token: new_uuid.clone(),
-            };
-            web::block(move || {
-                let mut conn = pool.get()?;
-                User::insert_new_user_config(&mut conn, new_user)
-            })
-            .await?
-            .map_err(actix_web::error::ErrorInternalServerError)?;
+    info!("user id: {}", user_info.id);
+    let mut context = tera::Context::new();
 
-            context.insert("token", &new_uuid);
-            current_user_token = new_uuid;
-        }
+    let clone_pool = pool.clone();
+    let mid = user_info.id.clone();
+    let mplatform = user_info.platform.clone();
+    let current_user = web::block(move || {
+        let mut conn = clone_pool.get()?;
+        User::get_user(&mut conn, &mid, &mplatform)
+    })
+    .await
+    .map_err(actix_web::error::ErrorInternalServerError)?;
 
-        // redirect to login success page with 302, and set cookie
-        let redirect = HttpResponse::Found()
-        .append_header(("Location","/"))
-        .cookie(actix_web::cookie::Cookie::build("token", &current_user_token)
-        .path("/")
-        .finish())
-        .finish();
-        Ok(redirect)
+    let current_user_token: String;
+    if let Ok(Some(current_user)) = current_user {
+        current_user_token = current_user.token;
+        context.insert("token", &current_user_token);
+    } else {
+        let new_uuid = Uuid::new_v4().to_string();
+        let new_user = NewUser {
+            name: user_info.name,
+            user_id: user_info.id,
+            platform: user_info.platform,
+            token: new_uuid.clone(),
+        };
+        web::block(move || {
+            let mut conn = pool.get()?;
+            User::insert_new_user_config(&mut conn, new_user)
+        })
+        .await?
+        .map_err(actix_web::error::ErrorInternalServerError)?;
+
+        context.insert("token", &new_uuid);
+        current_user_token = new_uuid;
     }
-    else {
-        error!("get user id failed");
-        let rediret = HttpResponse::Found()
-        .append_header(("Location","/"))
+
+    // redirect to login success page with 302, and set cookie
+    let redirect = HttpResponse::Found()
+        .append_header(("Location", "/"))
+        .cookie(
+            actix_web::cookie::Cookie::build("token", &current_user_token)
+                .path("/")
+                .finish(),
+        )
         .finish();
-        Ok(rediret)
-    }
+    Ok(redirect)
 }
 
 pub fn user_login_route_config(cfg: &mut web::ServiceConfig) {
-    #[cfg(feature = "github-login")]
-    cfg.service(login_github_callback);
-    #[cfg(feature = "gitlab-login")]
-    cfg.service(login_gitlab_callback);
-    #[cfg(feature = "google-login")]
-    cfg.service(login_google_callback);
-    #[cfg(feature = "microsoft-login")]
-    cfg.service(login_microsoft_callback);
+    cfg.service(login);
+    cfg.service(login_callback);
 }
