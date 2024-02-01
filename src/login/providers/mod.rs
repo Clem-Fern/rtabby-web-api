@@ -78,20 +78,25 @@ impl Provider {
             ("redirect_uri", format!("{}://{}/login/{}/callback", tools::scheme(), host, self.name())),
         ];
 
+        #[cfg(feature = "github-login")]
         if !matches!(self, Self::Github(_)) {
             params.push(("response_type", "code".to_string()));
         }
 
         match self {
+            #[cfg(feature = "gitlab-login")]
             Self::Gitlab(_) => {
                 params.push(("scope", "read_user".to_string()));
             }
+            #[cfg(feature = "google-login")]
             Self::Google(_) => {
                 params.push(("scope", "https://www.googleapis.com/auth/userinfo.profile".to_string()));
             },
+            #[cfg(feature = "microsoft-login")]
             Self::Microsoft(_) => {
                 params.push(("scope", "https://graph.microsoft.com/User.Read".to_string()));
             },
+            #[cfg(feature = "github-login")]
             _ => {},
         }
 
@@ -116,8 +121,9 @@ impl Provider {
         reqwest::Url::parse_with_params(oauth_url, params).unwrap().to_string()
     }
 
+    #[allow(unused_variables)]
     pub async fn get_user_info(&self, host: String, token: String) -> Result<ThirdPartyUserInfo, OauthError> {
-        let user_info = match self {
+        let user_info: OauthUserInfo = match self {
             #[cfg(feature = "github-login")]
             Self::Github(oauth) => github::user_info(oauth, host).await?.into(),
             #[cfg(feature = "gitlab-login")]
