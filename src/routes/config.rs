@@ -51,13 +51,14 @@ async fn get_config(
     let token = String::from(auth.token());
     let id = path.into_inner();
 
-    match web::block(move || {
+    let result = web::block(move || {
         let mut conn = pool.get()?;
         Config::get_config_by_id_and_user(&mut conn, id, &token)
     })
     .await?
-    .map_err(actix_web::error::ErrorInternalServerError)?
-    {
+    .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    match result {
         Some(config) => Ok(HttpResponse::Ok().json(Into::<ConfigWithoutUser>::into(config))),
         None => Ok(HttpResponse::Unauthorized().finish()),
     }

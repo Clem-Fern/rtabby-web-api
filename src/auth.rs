@@ -31,12 +31,13 @@ pub async fn bearer_auth_validator(
         let pool = req.app_data::<web::Data<DbPool>>().unwrap().clone();
         let token = token.clone();
 
-        match web::block(move || {
+        let result = web::block(move || {
             let mut conn = pool.get()?;
             User::get_user_by_token(&mut conn, &token)
         })
-        .await
-        {
+        .await;
+
+        match result {
             Ok(result) => match result {
                 Ok(result) => {
                     if let Some(_user) = result {
