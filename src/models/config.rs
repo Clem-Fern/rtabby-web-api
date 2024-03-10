@@ -159,6 +159,18 @@ pub struct ConfigWithoutUserAndContent {
     pub modified_at: NaiveDateTime,
 }
 
+impl From<Config> for ConfigWithoutUserAndContent {
+    fn from(config: Config) -> Self {
+        ConfigWithoutUserAndContent {
+            id: config.id,
+            name: config.name,
+
+            created_at: config.created_at,
+            modified_at: config.modified_at,
+        }
+    }
+}
+
 #[derive(
     Clone, Debug, Serialize, Deserialize, Identifiable, Queryable, Insertable, AsChangeset,
 )]
