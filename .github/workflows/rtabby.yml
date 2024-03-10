@@ -122,7 +122,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             GIT_COMMIT=${{ steps.prep.outputs.GIT_COMMIT }}
-            FEATURE_FLAGS=-F|${{ matrix.db }}-bundle${{ matrix.minimal && '' || '|-F|all-login' }}
+            FEATURE_FLAGS=-F|${{ matrix.db }}-bundle${{ !matrix.minimal && '|-F|all-login' || '' }}
 
       # Sign the resulting Docker image digest except on PRs.
       # This will only write to the public Rekor transparency log when the Docker
