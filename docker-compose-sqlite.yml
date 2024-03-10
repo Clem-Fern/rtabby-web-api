@@ -27,6 +27,14 @@ services:
       - "8080:8080"
     environment:
       - DATABASE_URL=sqlite:///config/db.sqlite
+      #- GITHUB_APP_CLIENT_ID=
+      #- GITHUB_APP_CLIENT_SECRET=
+      #- GITLAB_APP_CLIENT_ID=
+      #- GITLAB_APP_CLIENT_SECRET=
+      #- GOOGLE_APP_CLIENT_ID=
+      #- GOOGLE_APP_CLIENT_SECRET=
+      #- MICROSOFT_APP_CLIENT_ID=
+      #- MICROSOFT_APP_CLIENT_SECRET=
     volumes:
       - ./config:/config
     networks:
