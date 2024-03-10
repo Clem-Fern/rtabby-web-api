@@ -4,29 +4,38 @@ version = "0.3.0"
 edition = "2021"
 
 [features]
-default = ["mysql"]
+default = ["mysql", "all-login"]
 dotenv = ["dep:dotenvy"]
 mysql = ["diesel/mysql"]
-mysqlclient-static = ["mysql"]
+mysql-bundle = ["mysql"]
 sqlite = ["diesel/sqlite"]
 sqlite-bundle = ["sqlite", "libsqlite3-sys/bundled"]
+third-party-login = ["dep:actix-session", "dep:tera", "dep:reqwest", "dep:actix-files"]
+google-login = ["third-party-login"]
+github-login = ["third-party-login"]
+gitlab-login = ["third-party-login"]
+microsoft-login = ["third-party-login"]
+all-login = ["google-login", "github-login", "gitlab-login", "microsoft-login"]
 
 [dev-dependencies]
 dotenvy = "0.15.6"
 
 [dependencies]
-cfg-if = "1.0.0"
-env_logger = "0.10.0"
+env_logger = "0.11.3"
 log = "0.4.16"
 dotenvy = {version = "0.15.6", optional = true}
 rustls = "0.21.7"
 rustls-pemfile = "1.0.0"
-actix-web = { version = "4.2.1", features = ["rustls-0_21"]  }
-actix-web-httpauth = "0.8.0"
+actix-web = { version = "4.5.1", features = ["rustls-0_21"]  }
+actix-web-httpauth = "0.8.1"
+actix-session = { version = "0.9.0", features = ["cookie-session"], optional = true }
+actix-files = { version = "0.6.5", optional = true }
 chrono = { version = "0.4.22", features = ["serde"] }
 libsqlite3-sys = { version = "0", optional = true }
-diesel = { version = "2.0.2", features = ["chrono", "r2d2"] }
-diesel_migrations = "2.0.0"
+diesel = { version = "2.1.4", features = ["chrono", "r2d2"] }
+diesel_migrations = "2.1.0"
 serde = { version = "1.0.152", features = ["derive"] }
 serde_yaml = "0.9.16"
-uuid = "1.2.2"
+uuid = { version = "1.6.1", features = ["serde", "v4"] }
+tera = { version = "1", optional = true }
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false, optional = true }

@@ -1,0 +1,74 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+  }
+  
+  .container {
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  h1 {
+    color: #333;
+  }
+  
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+  }
+  
+  .success-container,
+  .error-container {
+    text-align: center;
+  }
+  
+  .token-display {
+    background-color: #dff0d8;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+  }
+  
+  .copy-btn {
+    background-color: #5bc0de;
+    margin-left: 10px;
+    width: 100px;
+  }
+
+  .logout-btn {
+    margin-left: 10px;
+    width: 100px;
+    background-color: #e74c3c; /* 红色系，可以根据需要选择其他颜色 */
+    color: #fff; /* 文本颜色，白色在深色背景上通常更易读 */
+  }
+  
+  .logout-btn:hover {
+    background-color: #c0392b; /* 鼠标悬停时的背景颜色，可以选择稍深的色调 */
+  }
+
+  .error-container {
+    color: #a94442;
+  }
+  
+  .version {
+    margin-top: 20px;
+    color: #ccc;
+  }

@@ -3,7 +3,7 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 
 use crate::storage::DbPool;
 
-use crate::models::config::{Config, NewConfig, UpdateConfig, ConfigWithoutUser};
+use crate::models::config::{Config, ConfigWithoutUser, ConfigWithoutUserAndContent, NewConfig, UpdateConfig};
 
 #[get("/configs")]
 async fn show_configs(auth: BearerAuth, pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {
@@ -51,13 +51,14 @@ async fn get_config(
     let token = String::from(auth.token());
     let id = path.into_inner();
 
-    match web::block(move || {
+    let result = web::block(move || {
         let mut conn = pool.get()?;
         Config::get_config_by_id_and_user(&mut conn, id, &token)
     })
     .await?
-    .map_err(actix_web::error::ErrorInternalServerError)?
-    {
+    .map_err(actix_web::error::ErrorInternalServerError)?;
+
+    match result {
         Some(config) => Ok(HttpResponse::Ok().json(Into::<ConfigWithoutUser>::into(config))),
         None => Ok(HttpResponse::Unauthorized().finish()),
     }
@@ -88,15 +89,16 @@ async fn update_config(
     }
 
     let config = config.unwrap();
+    let c = config.clone();
     web::block(move || {
         // update config content
         let mut conn = pool.get()?;
-        Config::update_user_config_content(&mut conn, config, &updated_config.content)
+        Config::update_user_config_content(&mut conn, c, &updated_config.content)
     })
     .await?
     .map_err(actix_web::error::ErrorInternalServerError)?;
 
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().json(Into::<ConfigWithoutUserAndContent>::into(config.clone())))
 }
 
 #[delete("/configs/{id}")]

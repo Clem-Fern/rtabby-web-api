@@ -1,8 +1,18 @@
 services:
   rtabby:
     container_name: rtabby-web-api
-    #build: .
-    image: ghcr.io/clem-fern/rtabby-web-api
+
+    image: ghcr.io/clem-fern/rtabby-web-api:latest
+    # Minimal image without third party login
+    #image: ghcr.io/clem-fern/rtabby-web-api:latest-minimal
+
+    # Build image from local rtabby repository
+    #build:
+    #  context: .
+    #  args:
+    #    - GIT_COMMIT=${GIT_COMMIT}
+    # Optional: Minimal image without third party login
+    #    - FEATURE_FLAGS=-F|mysql-bundle
 
     # If running as root, setup your user/volume owner UID and GID
     #user: "1000:1000"
@@ -16,6 +26,15 @@ services:
       - "8080:8080"
     environment:
       - DATABASE_URL=mysql://tabby:tabby@db/tabby
+      #- GITHUB_APP_CLIENT_ID=
+      #- GITHUB_APP_CLIENT_SECRET=
+      #- GITLAB_APP_CLIENT_ID=
+      #- GITLAB_APP_CLIENT_SECRET=
+      #- GOOGLE_APP_CLIENT_ID=
+      #- GOOGLE_APP_CLIENT_SECRET=
+      #- MICROSOFT_APP_CLIENT_ID=
+      #- MICROSOFT_APP_CLIENT_SECRET=
+
     volumes:
       - ./config:/config
     networks:
