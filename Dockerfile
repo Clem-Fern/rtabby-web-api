@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1
 FROM rust:1.76-alpine AS builder
-ARG FEATURE_FLAGS="-F|mysqlclient-static|-F|github-login"
+ARG FEATURE_FLAGS="-F|mysqlclient-bundle|-F|all-login"
 WORKDIR /build
 COPY . .
 
 RUN apk add --no-cache build-base
 
-RUN if [[ "$FEATURE_FLAGS" == *"mysqlclient-static"* ]]; then \
+RUN if [[ "$FEATURE_FLAGS" == *"mysqlclient-bundle"* ]]; then \
         apk add --no-cache binutils mariadb-dev musl-dev bash cmake curl && \
         bash scripts/mariadb-static-build.sh && \ 
         bash scripts/zlib-static-build.sh && \
@@ -24,14 +24,14 @@ RUN if [[ "$FEATURE_FLAGS" == *"login"* ]]; then \
     fi 
 
 
-RUN cargo build --target=x86_64-unknown-linux-musl --release $(echo "$FEATURE_FLAGS" | sed 's/|/ /g')
+RUN cargo build --release --no-default-features --target-dir /build/target/docker $(echo "$FEATURE_FLAGS" | sed 's/|/ /g')
 
 FROM scratch
 ARG GIT_COMMIT
 
 WORKDIR /config
 
-COPY --from=builder /build/target/x86_64-unknown-linux-musl/release/rtabby-web-api /
+COPY --from=builder /build/target/docker/release/rtabby-web-api /
 COPY --from=builder /build/users.exemple.yml .
 COPY --from=builder /build/web/ /www/web/
 ENV STATIC_FILES_BASE_DIR=/www/web/
