@@ -11,7 +11,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
 use super::error::OauthError;
-use super::tools;
+
+use actix_web::http::uri::Scheme;
 
 #[derive(Clone, Debug)]
 pub struct OauthInfo {
@@ -71,11 +72,11 @@ impl Provider {
         }
     }
 
-    fn get_login_url_params(&self, host: String, state: String) -> Vec<(&str, String)> {
+    fn get_login_url_params(&self, scheme: Scheme, host: String, state: String) -> Vec<(&str, String)> {
         let mut params = vec![
             ("client_id", self.get_oauth_info().client_id),
             ("state", state),
-            ("redirect_uri", format!("{}://{}/login/{}/callback", tools::scheme(), host, self.name())),
+            ("redirect_uri", format!("{}://{}/login/{}/callback", scheme, host, self.name())),
         ];
 
         #[cfg(feature = "github-login")]
@@ -103,9 +104,9 @@ impl Provider {
         params
     }
 
-    pub fn get_login_url(&self, host: String, state: String) -> String {
+    pub fn get_login_url(&self, scheme: Scheme, host: String, state: String) -> String {
 
-        let params = self.get_login_url_params(host, state);
+        let params = self.get_login_url_params(scheme, host, state);
 
         let oauth_url = match self {
             #[cfg(feature = "github-login")]
@@ -122,16 +123,16 @@ impl Provider {
     }
 
     #[allow(unused_variables)]
-    pub async fn get_user_info(&self, host: String, token: String) -> Result<ThirdPartyUserInfo, OauthError> {
+    pub async fn get_user_info(&self, scheme: Scheme, host: String, token: String) -> Result<ThirdPartyUserInfo, OauthError> {
         let user_info: OauthUserInfo = match self {
             #[cfg(feature = "github-login")]
             Self::Github(oauth) => github::user_info(oauth, host).await?.into(),
             #[cfg(feature = "gitlab-login")]
-            Self::Gitlab(oauth) => gitlab::user_info(oauth, host, token).await?.into(),
+            Self::Gitlab(oauth) => gitlab::user_info(scheme, oauth, host, token).await?.into(),
             #[cfg(feature = "google-login")]
-            Self::Google(oauth) => google::user_info(oauth, host, token).await?,
+            Self::Google(oauth) => google::user_info(scheme, oauth, host, token).await?,
             #[cfg(feature = "microsoft-login")]
-            Self::Microsoft(oauth) => microsoft::user_info(oauth, host, token).await?.into(),
+            Self::Microsoft(oauth) => microsoft::user_info(scheme, oauth, host, token).await?.into(),
         };
 
         Ok(ThirdPartyUserInfo {
