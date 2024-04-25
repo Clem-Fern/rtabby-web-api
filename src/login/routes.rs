@@ -89,7 +89,7 @@ async fn login(
     let host = req.connection_info().host().to_string();
     let state = Uuid::new_v4().to_string();
 
-    let login_url = provider.get_login_url(host, state.clone());
+    let login_url = provider.get_login_url(providers_config.get_callback_scheme(), host, state.clone());
 
     let mut response = HttpResponse::TemporaryRedirect()
         .append_header(("Location", login_url))
@@ -148,7 +148,7 @@ async fn login_callback(
     let host = req.connection_info().host().to_string();
 
     let user_info = provider
-        .get_user_info(host, info.code.clone())
+        .get_user_info(providers_config.get_callback_scheme(), host, info.code.clone())
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
 

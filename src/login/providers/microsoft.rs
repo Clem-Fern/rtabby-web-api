@@ -1,6 +1,6 @@
 use crate::login::error::OauthError;
 use crate::login::providers::{get_user_info, get_access_token, OauthInfo, OauthUserInfo};
-use crate::login::tools;
+use actix_web::http::uri::Scheme;
 use serde::Deserialize;
 
 pub mod env {
@@ -29,8 +29,8 @@ impl From<MicrosoftOauthUserInfo> for OauthUserInfo {
     }
 }
 
-pub async fn user_info(oauth: &OauthInfo, host: String, code: String) -> Result<MicrosoftOauthUserInfo, OauthError> {
-    let redirect_uri = format!("{}://{}/login/microsoft/callback", tools::scheme(), host);
+pub async fn user_info(scheme: Scheme, oauth: &OauthInfo, host: String, code: String) -> Result<MicrosoftOauthUserInfo, OauthError> {
+    let redirect_uri = format!("{}://{}/login/microsoft/callback", scheme, host);
     let token = get_access_token(MICROSOFT_OAUTH_ACCESS_TOKEN_URL, code, oauth.client_id.clone(), oauth.client_secret.clone(), "authorization_code", Some(redirect_uri)).await?;
     get_user_info(MICROSOFT_OAUTH_USER_INFO_URL, token).await.map_err(OauthError::UserInfo)?.json::<MicrosoftOauthUserInfo>().await.map_err(OauthError::UserInfo)
 }

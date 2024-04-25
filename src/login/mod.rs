@@ -4,10 +4,12 @@ pub mod providers;
 pub mod routes;
 pub mod services;
 pub mod error;
-mod tools;
 
 use crate::env as app_env;
 
+use actix_web::http::uri::Scheme;
+
+use log::warn;
 #[cfg(feature = "github-login")]
 use providers::github;
 #[cfg(feature = "gitlab-login")]
@@ -21,10 +23,34 @@ use self::providers::OauthInfo;
 
 #[derive(Clone, Debug)]
 pub struct ProvidersConfig {
+    pub https_callback: bool,
     pub available_providers: Vec<providers::Provider>,
 }
 
+impl ProvidersConfig {
+
+    pub fn get_callback_scheme(&self) -> Scheme {
+        if self.https_callback {
+            Scheme::HTTPS
+        } else {
+            Scheme::HTTP
+        }
+    }
+
+}
+
 pub fn get_provider_config() -> ProvidersConfig {
+
+    let https_callback = if app_env::var(env::ENV_HTTPS_CALLBACK).is_ok() {
+        app_env::var(env::ENV_HTTPS_CALLBACK).unwrap_or(String::from("false")).to_lowercase().parse().unwrap_or(false)
+    } else if app_env::var(env::ENV_USE_HTTPS).is_ok() {
+        // DEPRECATED
+        warn!("\"USE_HTTPS\" deprecated. Use \"HTTPS_CALLBACK\" instead.");
+        app_env::var(env::ENV_USE_HTTPS).unwrap_or(String::from("0")) == "1"
+    } else {
+        false
+    };
+
     let mut available_providers: Vec<providers::Provider> = vec![];
 
     #[cfg(feature = "github-login")]
@@ -68,6 +94,7 @@ pub fn get_provider_config() -> ProvidersConfig {
     }
 
     ProvidersConfig {
+        https_callback,
         available_providers
     }
 }
