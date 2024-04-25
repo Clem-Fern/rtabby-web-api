@@ -1,5 +1,6 @@
 pub const ENV_STATIC_FILES_BASE_DIR: &str = "STATIC_FILES_BASE_DIR";
 pub const ENV_USE_HTTPS: &str = "USE_HTTPS";
+pub const ENV_HTTPS_CALLBACK: &str = "HTTPS_CALLBACK";
 
 use crate::env as app_env;
 

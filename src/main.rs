@@ -91,7 +91,13 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
     let providers_config: login::ProvidersConfig = login::get_provider_config();
 
     #[cfg(feature = "third-party-login")]
-    info!("Third party login enabled: {} providers found.", providers_config.available_providers.len());
+    {
+        info!("Third party login enabled: {} providers found.", providers_config.available_providers.len());
+        if providers_config.https_callback {
+            info!("Third party login enabled: login callback will use HTTPS");
+        }
+    }
+
 
     let pool = storage.pool()?;
     let mut server = HttpServer::new(move || {
