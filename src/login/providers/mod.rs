@@ -126,7 +126,7 @@ impl Provider {
     pub async fn get_user_info(&self, scheme: Scheme, host: String, token: String) -> Result<ThirdPartyUserInfo, OauthError> {
         let user_info: OauthUserInfo = match self {
             #[cfg(feature = "github-login")]
-            Self::Github(oauth) => github::user_info(oauth, host).await?.into(),
+            Self::Github(oauth) => github::user_info(oauth, token).await?.into(),
             #[cfg(feature = "gitlab-login")]
             Self::Gitlab(oauth) => gitlab::user_info(scheme, oauth, host, token).await?.into(),
             #[cfg(feature = "google-login")]
