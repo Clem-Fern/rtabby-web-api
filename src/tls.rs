@@ -1,121 +1,41 @@
-use std::{
-    fs::File,
-    io::{BufReader, Error, ErrorKind},
-    iter,
-};
+use std::io::{Error, ErrorKind};
 
 extern crate rustls;
-use rustls::{Certificate, PrivateKey, ServerConfig};
-extern crate rustls_pemfile;
-use rustls_pemfile::{read_one, Item};
-
-use log::warn;
+use rustls::{
+    pki_types::{pem::PemObject, CertificateDer, PrivateKeyDer},
+    ServerConfig,
+};
 
 use crate::error;
 
-pub struct TLSConfigBuilder {
-    cert: Option<Vec<Certificate>>,
-    key: Option<PrivateKey>,
-}
+pub struct TLSConfigBuilder;
 
 impl TLSConfigBuilder {
-    pub fn new() -> Self {
-        TLSConfigBuilder {
-            cert: None,
-            key: None,
-        }
-    }
+    pub fn build(cert_filename: &str, key_filename: &str) -> Result<ServerConfig, error::TlsError> {
+        rustls::crypto::aws_lc_rs::default_provider()
+            .install_default()
+            .unwrap();
 
-    pub fn load_certs(mut self, filename: &str) -> Result<Self, error::TlsError> {
-        let certfile = File::open(filename).map_err(|e| {
-            Error::new(
-                ErrorKind::Other,
-                format!("failed to open certificate file {filename}: {e}"),
-            )
-        })?;
-        let mut reader = BufReader::new(certfile);
-
-        let certs: Vec<Certificate> = rustls_pemfile::certs(&mut reader)
-        .map_err(|e| {
-            Error::new(
-                ErrorKind::Other,
-                format!(
-                    "rustls_pemfile failed to collect certificates from {filename}: {e}"
-                ),
-            )
-        })?
-        .iter()
-        .map(|v| rustls::Certificate(v.clone()))
-        .collect();
-
-        if certs.is_empty() {
-            return Err(error::TlsError::Io(Error::new(
-                ErrorKind::Other,
-                format!(
-                    "no certificates found in {filename}"
-                ),
-            )));
-        }
-
-        self.cert = Some(certs);
-
-        Ok(self)
-    }
-
-    pub fn load_private_key(mut self, filename: &str) -> Result<Self, error::TlsError> {
-        let keyfile = File::open(filename).map_err(|e| {
-            Error::new(
-                ErrorKind::Other,
-                format!("failed to open certificate file {filename}: {e}"),
-            )
-        })?;
-        let mut reader = BufReader::new(keyfile);
-
-        let mut keys: Vec<PrivateKey> = Vec::new();
-
-        for item in iter::from_fn(|| read_one(&mut reader).transpose()) {
-            match item.map_err(|e| {
+        let cert = CertificateDer::pem_file_iter(cert_filename)
+            .map_err(|e| {
                 Error::new(
                     ErrorKind::Other,
-                    format!(
-                        "rustls_pemfile failed to collect private key from {filename}: {e}"
-                    ),
+                    format!("failed to collect certificates from {cert_filename}: {e}"),
                 )
-            })? {
-                Item::RSAKey(key) => keys.push(PrivateKey(key)),
-                Item::PKCS8Key(key) => keys.push(PrivateKey(key)),
-                Item::ECKey(key) => keys.push(PrivateKey(key)),
-                _ => warn!("unhandled key found in {}", filename),
-            }
-        }
+            })?
+            .flatten()
+            .collect();
 
-        if keys.is_empty() {
-            return Err(error::TlsError::Io(Error::new(
+        let key = PrivateKeyDer::from_pem_file(key_filename).map_err(|e| {
+            Error::new(
                 ErrorKind::Other,
-                format!(
-                    "no keys found in {filename} (encrypted keys not supported)"
-                ),
-            )));
-        }
+                format!("failed to collect private key from {key_filename}: {e}"),
+            )
+        })?;
 
-        if keys.len() > 1 {
-            return Err(error::TlsError::Io(Error::new(
-                ErrorKind::Other,
-                format!(
-                    "expected a single private key in {filename}"
-                ),
-            )));
-        }
-
-        self.key = Some(keys.first().unwrap().to_owned());
-
-        Ok(self)
-    }
-
-    pub fn build(self) -> Result<ServerConfig, error::TlsError> {
         ServerConfig::builder()
-            .with_safe_defaults()
             .with_no_client_auth()
-            .with_single_cert(self.cert.unwrap(), self.key.unwrap()).map_err(error::TlsError::Rustls)
+            .with_single_cert(cert, key)
+            .map_err(error::TlsError::Rustls)
     }
 }

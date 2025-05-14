@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM rust:1.76-alpine AS builder
+FROM rust:alpine AS builder
 ARG FEATURE_FLAGS="-F|mysql-bundle|-F|all-login"
 WORKDIR /build
 COPY . .
