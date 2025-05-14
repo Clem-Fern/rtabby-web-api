@@ -130,13 +130,10 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
         let ssl_certificate_key =
             env::var(env::ENV_SSL_CERTIFICATE_KEY).expect("Missing SSL_CERTIFICATE_KEY env var");
 
-        let config = tls::TLSConfigBuilder::new()
-            .load_certs(&ssl_certificate)?
-            .load_private_key(&ssl_certificate_key)?
-            .build()?;
+        let config = tls::TLSConfigBuilder::build(&ssl_certificate, &ssl_certificate_key)?;
 
         info!("Binding HTTPS Listener on {bind_addr}:{bind_port}");
-        server = server.bind_rustls_021(format!("{bind_addr}:{bind_port}"), config)?;
+        server = server.bind_rustls_0_23(format!("{bind_addr}:{bind_port}"), config)?;
     } else {
         info!("Binding HTTP Listener on {bind_addr}:{bind_port}");
         server = server.bind(format!("{bind_addr}:{bind_port}"))?;
