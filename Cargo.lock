@@ -487,9 +487,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "2.9.0"
+version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
+checksum = "1b8e56985ec62d17e9c1001dc89c88ecd7dc08e47eba5ec7c29c7b5eeecde967"
 
 [[package]]
 name = "block-buffer"
@@ -1662,6 +1662,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "link-cplusplus"
+version = "1.0.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a6f6da007f968f9def0d65a05b187e2960183de70c160204ecfccf0ee330212"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1783,11 +1792,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "mysqlclient-src"
+version = "0.1.3+9.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ebac03ab8be41015fec2d2435929e4b19cd6133a624ac777409993f238768fd"
+dependencies = [
+ "cmake",
+ "link-cplusplus",
+ "openssl-src",
+ "openssl-sys",
+]
+
+[[package]]
 name = "mysqlclient-sys"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fe45ac04fb301fa824ce6a3a0ef0171b52e92c6d25973c085cece9d88727bd7"
 dependencies = [
+ "mysqlclient-src",
  "pkg-config",
  "semver",
  "vcpkg",
@@ -1838,6 +1860,28 @@ name = "opaque-debug"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08d65885ee38876c4f86fa503fb49d7b507c2b62552df7c70b2fce627e06381"
+
+[[package]]
+name = "openssl-src"
+version = "300.5.0+3.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8ce546f549326b0e6052b649198487d91320875da901e7bd11a06d1ee3f9c2f"
+dependencies = [
+ "cc",
+]
+
+[[package]]
+name = "openssl-sys"
+version = "0.9.108"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e145e1651e858e820e4860f7b9c5e169bc1d8ce1c86043be79fa7b7634821847"
+dependencies = [
+ "cc",
+ "libc",
+ "openssl-src",
+ "pkg-config",
+ "vcpkg",
+]
 
 [[package]]
 name = "parking_lot"
@@ -2304,6 +2348,7 @@ dependencies = [
  "env_logger",
  "libsqlite3-sys",
  "log",
+ "mysqlclient-sys",
  "reqwest",
  "rustls",
  "serde",
