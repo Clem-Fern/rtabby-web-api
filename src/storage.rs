@@ -109,5 +109,15 @@ fn run_sqlite_migrations(
 }
 
 pub fn establish_connection(url: &str) -> Result<DbConnection, diesel::ConnectionError> {
+    #[cfg(feature = "mysql")]
+    if url.starts_with("mysql://") {
+        return Ok(DbConnection::Mysql(MysqlConnection::establish(url)?));
+    }
+    
+    #[cfg(feature = "sqlite")]
+    if url.starts_with("sqlite://") {
+        return Ok(DbConnection::Sqlite(SqliteConnection::establish(url)?));
+    }
+
     DbConnection::establish(url)
 }
