@@ -31,7 +31,7 @@ actix-session = { version = "0.10", features = ["cookie-session"], optional = tr
 actix-files = { version = "0.6", optional = true }
 chrono = { version = "0.4", features = ["serde"] }
 libsqlite3-sys = { version = "0", optional = true }
-mysqlclient-sys = { version = "0", optional = true }
+mysqlclient-sys = { git = "https://github.com/Clem-Fern/mysqlclient-sys", branch = "client_plugin_auth", optional = true }
 diesel = { version = "2", features = ["chrono", "r2d2"] }
 diesel_migrations = "2"
 serde = { version = "1", features = ["derive"] }
