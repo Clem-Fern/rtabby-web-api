@@ -1793,9 +1793,9 @@ dependencies = [
 
 [[package]]
 name = "mysqlclient-src"
-version = "0.1.3+9.2.0"
+version = "0.1.4+9.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1ebac03ab8be41015fec2d2435929e4b19cd6133a624ac777409993f238768fd"
+checksum = "3fb3acc91e4bacea5c6380ac15f3185b261fe0d71e78f9f5b423cf7d6b3b065d"
 dependencies = [
  "cmake",
  "link-cplusplus",
@@ -1805,9 +1805,9 @@ dependencies = [
 
 [[package]]
 name = "mysqlclient-sys"
-version = "0.4.5"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fe45ac04fb301fa824ce6a3a0ef0171b52e92c6d25973c085cece9d88727bd7"
+checksum = "86a34a2bdec189f1060343ba712983e14cad7e87515cfd9ac4653e207535b6b1"
 dependencies = [
  "mysqlclient-src",
  "pkg-config",
