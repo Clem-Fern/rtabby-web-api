@@ -7,7 +7,7 @@ edition = "2021"
 default = ["mysql", "all-login"]
 dotenv = ["dep:dotenvy"]
 mysql = ["diesel/mysql"]
-mysql-bundle = ["mysql"]
+mysql-bundle = ["mysql", "mysqlclient-sys/bundled"]
 sqlite = ["diesel/sqlite"]
 sqlite-bundle = ["sqlite", "libsqlite3-sys/bundled"]
 third-party-login = ["dep:actix-session", "dep:tera", "dep:reqwest", "dep:actix-files"]
@@ -31,6 +31,7 @@ actix-session = { version = "0.10", features = ["cookie-session"], optional = tr
 actix-files = { version = "0.6", optional = true }
 chrono = { version = "0.4", features = ["serde"] }
 libsqlite3-sys = { version = "0", optional = true }
+mysqlclient-sys = { version = "0", optional = true }
 diesel = { version = "2", features = ["chrono", "r2d2"] }
 diesel_migrations = "2"
 serde = { version = "1", features = ["derive"] }
