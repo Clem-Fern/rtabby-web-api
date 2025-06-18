@@ -1,4 +1,4 @@
-use std::io::{Error, ErrorKind};
+use std::io::Error;
 
 extern crate rustls;
 use rustls::{
@@ -18,19 +18,17 @@ impl TLSConfigBuilder {
 
         let cert = CertificateDer::pem_file_iter(cert_filename)
             .map_err(|e| {
-                Error::new(
-                    ErrorKind::Other,
-                    format!("failed to collect certificates from {cert_filename}: {e}"),
-                )
+                Error::other(format!(
+                    "failed to collect certificates from {cert_filename}: {e}"
+                ))
             })?
             .flatten()
             .collect();
 
         let key = PrivateKeyDer::from_pem_file(key_filename).map_err(|e| {
-            Error::new(
-                ErrorKind::Other,
-                format!("failed to collect private key from {key_filename}: {e}"),
-            )
+            Error::other(format!(
+                "failed to collect private key from {key_filename}: {e}"
+            ))
         })?;
 
         ServerConfig::builder()
