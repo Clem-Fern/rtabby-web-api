@@ -1,11 +1,11 @@
+use crate::error::ConfigError;
+use crate::models::user::{LocalUser, UserWithoutToken};
 use log::warn;
 use serde::Deserialize;
-use crate::models::user::{LocalUser, UserWithoutToken};
-use crate::error::ConfigError;
 use std::collections::HashMap;
 use std::fs::File;
-use std::path::Path;
 use std::io::Write;
+use std::path::Path;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct AppConfig {
@@ -38,15 +38,15 @@ impl From<AppConfig> for MappedAppConfig {
         let mut users_map: HashMap<String, UserWithoutToken> = HashMap::new();
         for user in config.users {
             if users_map.contains_key(&user.token) {
-                warn!("Config : Skipping user {}, which is not unique in the configuration", &user.token);
+                warn!(
+                    "Config : Skipping user {}, which is not unique in the configuration",
+                    &user.token
+                );
             } else {
                 users_map.insert(user.token.clone(), user.clone().into());
             }
         }
 
-        MappedAppConfig {
-            users: users_map,
-        }
-
+        MappedAppConfig { users: users_map }
     }
 }

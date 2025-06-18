@@ -8,8 +8,3 @@ data.db
 users.yml
 config
 build
-lib
-mariadb-connector-c-3.3.3-src.tar.gz
-mariadb-connector-c-3.3.3-src
-zlib.tar.gz
-zlib

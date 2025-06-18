@@ -1,5 +1,5 @@
 use crate::login::error::OauthError;
-use crate::login::providers::{get_user_info, get_access_token, OauthInfo, OauthUserInfo};
+use crate::login::providers::{get_access_token, get_user_info, OauthInfo, OauthUserInfo};
 use actix_web::http::uri::Scheme;
 
 pub mod env {
@@ -13,8 +13,26 @@ pub const GITLAB_OAUTH_USER_INFO_URL: &str = "https://gitlab.com/api/v4/user";
 
 pub type GitlabOauthUserInfo = OauthUserInfo<i32, String>;
 
-pub async fn user_info(scheme: Scheme, oauth: &OauthInfo, host: String, token: String) -> Result<GitlabOauthUserInfo, OauthError> {
+pub async fn user_info(
+    scheme: Scheme,
+    oauth: &OauthInfo,
+    host: String,
+    token: String,
+) -> Result<GitlabOauthUserInfo, OauthError> {
     let redirect_uri = format!("{}://{}/login/gitlab/callback", scheme, host);
-    let token = get_access_token(GITLAB_OAUTH_ACCESS_TOKEN_URL, token, oauth.client_id.clone(), oauth.client_secret.clone(), "authorization_code", Some(redirect_uri)).await?;
-    get_user_info(GITLAB_OAUTH_USER_INFO_URL, token).await.map_err(OauthError::UserInfo)?.json::<GitlabOauthUserInfo>().await.map_err(OauthError::UserInfo)
+    let token = get_access_token(
+        GITLAB_OAUTH_ACCESS_TOKEN_URL,
+        token,
+        oauth.client_id.clone(),
+        oauth.client_secret.clone(),
+        "authorization_code",
+        Some(redirect_uri),
+    )
+    .await?;
+    get_user_info(GITLAB_OAUTH_USER_INFO_URL, token)
+        .await
+        .map_err(OauthError::UserInfo)?
+        .json::<GitlabOauthUserInfo>()
+        .await
+        .map_err(OauthError::UserInfo)
 }

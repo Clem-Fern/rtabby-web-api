@@ -22,9 +22,11 @@ async fn get_user(
         let current_user = web::block(move || {
             let mut conn = clone_pool.get()?;
             User::get_user_by_token(&mut conn, &clone_token)
-        }).await.map_err(actix_web::error::ErrorInternalServerError)?;
+        })
+        .await
+        .map_err(actix_web::error::ErrorInternalServerError)?;
         if let Ok(Some(current_user)) = current_user {
-            return Ok(HttpResponse::Ok().json(current_user))
+            return Ok(HttpResponse::Ok().json(current_user));
         }
     }
 

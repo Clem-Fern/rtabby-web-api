@@ -2,8 +2,7 @@ use chrono::{NaiveDateTime, Utc};
 use diesel::sql_types::{Integer, VarChar};
 use diesel::{
     sql_query, AsChangeset, BoolExpressionMethods, ExpressionMethods, Identifiable, Insertable,
-    NullableExpressionMethods, OptionalExtension, QueryDsl, Queryable,
-    RunQueryDsl,
+    NullableExpressionMethods, OptionalExtension, QueryDsl, Queryable, RunQueryDsl,
 };
 use serde::{Deserialize, Serialize};
 
@@ -48,19 +47,18 @@ impl Config {
         conn: &mut DbConnection,
         new_config: NewConfigWithUser,
     ) -> Result<(), DbError> {
-
         match conn {
             #[cfg(feature = "mysql")]
             DbConnection::Mysql(ref mut conn) => {
                 diesel::insert_into(all_configs)
-                .values(&new_config)
-                .execute(conn)?;
-            },
+                    .values(&new_config)
+                    .execute(conn)?;
+            }
             #[cfg(feature = "sqlite")]
             DbConnection::Sqlite(ref mut conn) => {
                 diesel::insert_into(all_configs)
-                .values(&new_config)
-                .execute(conn)?;
+                    .values(&new_config)
+                    .execute(conn)?;
             }
         }
 

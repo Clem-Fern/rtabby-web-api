@@ -1,6 +1,6 @@
 extern crate env_logger;
 extern crate log;
-use log::{info, error, warn};
+use log::{error, info, warn};
 
 use std::error::Error;
 
@@ -19,7 +19,7 @@ mod schema;
 extern crate serde_yaml;
 
 extern crate actix_web;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{middleware, web, App, HttpResponse, HttpServer};
 
 #[cfg(feature = "third-party-login")]
 mod login;
@@ -31,13 +31,19 @@ mod tls;
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-
     // third-party-login should only be enable by one of the features below (github-login, gitlab-login, google-login, microsoft-login)
     #[cfg(feature = "third-party-login")]
     {
-        #[cfg(not(any(feature = "github-login", feature = "gitlab-login", feature = "google-login", feature = "microsoft-login")))]
+        #[cfg(not(any(
+            feature = "github-login",
+            feature = "gitlab-login",
+            feature = "google-login",
+            feature = "microsoft-login"
+        )))]
         {
-            compile_error!("You must enable at least one login provider feature to use the login feature.");
+            compile_error!(
+                "You must enable at least one login provider feature to use the login feature."
+            );
         }
     }
 
@@ -62,7 +68,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             Err(err)
         }
     }
-
 }
 
 async fn run_app() -> Result<(), Box<dyn Error>> {
@@ -75,14 +80,23 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
     let config: AppConfig = app_config::load_file(&config_file_name)?;
     let config: MappedAppConfig = config.into();
 
-    info!("{} loaded => {} users found", config_file_name, config.users.len());
+    info!(
+        "{} loaded => {} users found",
+        config_file_name,
+        config.users.len()
+    );
 
     // INIT DATABASE STORAGE
     let storage: Storage = Storage::new();
     storage.init()?;
-    
+
     // storage clean up on start
-    if env::var(env::ENV_CLEANUP_USERS).unwrap_or(String::from("false")).to_lowercase().parse().unwrap_or(false) {
+    if env::var(env::ENV_CLEANUP_USERS)
+        .unwrap_or(String::from("false"))
+        .to_lowercase()
+        .parse()
+        .unwrap_or(false)
+    {
         warn!("Cleaning up old user configurations from storage.");
         storage.cleanup(&config)?;
     }
@@ -92,12 +106,14 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
     #[cfg(feature = "third-party-login")]
     {
-        info!("Third party login enabled: {} providers found.", providers_config.available_providers.len());
+        info!(
+            "Third party login enabled: {} providers found.",
+            providers_config.available_providers.len()
+        );
         if providers_config.https_callback {
             info!("Third party login enabled: login callback will use HTTPS");
         }
     }
-
 
     let pool = storage.pool()?;
     let mut server = HttpServer::new(move || {
@@ -109,13 +125,14 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
         #[cfg(feature = "third-party-login")]
         if !providers_config.available_providers.is_empty() {
-            return app.app_data(web::Data::new(providers_config.clone()))
-                .configure(login::services::login_config);
+            return app
+                .app_data(web::Data::new(providers_config.clone()))
+                .configure(login::services::login_config)
+                .service(web::redirect("/", "/login"));
         }
-        
-        #[allow(clippy::let_and_return)]
-        app
 
+        #[allow(clippy::let_and_return)]
+        app.service(web::resource("/").route(web::get().to(HttpResponse::Ok)))
     });
 
     // socket var
@@ -124,19 +141,15 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 
     if env::var(env::ENV_SSL_CERTIFICATE).is_ok() || env::var(env::ENV_SSL_CERTIFICATE_KEY).is_ok()
     {
-
         let ssl_certificate =
             env::var(env::ENV_SSL_CERTIFICATE).expect("Missing SSL_CERTIFICATE env var");
         let ssl_certificate_key =
             env::var(env::ENV_SSL_CERTIFICATE_KEY).expect("Missing SSL_CERTIFICATE_KEY env var");
 
-        let config = tls::TLSConfigBuilder::new()
-            .load_certs(&ssl_certificate)?
-            .load_private_key(&ssl_certificate_key)?
-            .build()?;
+        let config = tls::TLSConfigBuilder::build(&ssl_certificate, &ssl_certificate_key)?;
 
         info!("Binding HTTPS Listener on {bind_addr}:{bind_port}");
-        server = server.bind_rustls_021(format!("{bind_addr}:{bind_port}"), config)?;
+        server = server.bind_rustls_0_23(format!("{bind_addr}:{bind_port}"), config)?;
     } else {
         info!("Binding HTTP Listener on {bind_addr}:{bind_port}");
         server = server.bind(format!("{bind_addr}:{bind_port}"))?;
@@ -150,12 +163,13 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
 // configure service & route for api v1
 fn api_v1_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::scope("/api").service(
-            web::scope("/1")
-                .configure(routes::user::user_route_config) // USER ROUTE
-                .configure(routes::config::config_route_config),
-        )
-        // AUTH
-        .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator))
+        web::scope("/api")
+            .service(
+                web::scope("/1")
+                    .configure(routes::user::user_route_config) // USER ROUTE
+                    .configure(routes::config::config_route_config),
+            )
+            // AUTH
+            .wrap(HttpAuthentication::bearer(auth::bearer_auth_validator)),
     );
 }

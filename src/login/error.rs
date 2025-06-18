@@ -30,7 +30,9 @@ impl fmt::Display for OauthError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::UserInfo(ref err) => write!(f, "Unable to retreive OAuth user info: {err}"),
-            Self::AccessToken(ref err) => write!(f, "Unable to retreive OAuth user access token: {err}"),
+            Self::AccessToken(ref err) => {
+                write!(f, "Unable to retreive OAuth user access token: {err}")
+            }
         }
     }
 }

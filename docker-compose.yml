@@ -46,13 +46,9 @@ services:
   db:
     container_name: rtabby-database
     image: mariadb:latest
-    cap_add:		
-      - "CAP_CHOWN"
-      - "CAP_DAC_OVERRIDE"
-      - "CAP_SETGID"
-      - "CAP_SETUID"
-    cap_drop: ['ALL']
+
     read_only: true
+    
     tmpfs:
       - /run/mysqld/
       - /tmp

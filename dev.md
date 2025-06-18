@@ -1,13 +1,15 @@
 # Contribute / Development
 
 ## Dependencies
-Rust + Cargo + Diesel-cli (libmysql)
+Rust + Cargo + Diesel-cli (libmysql, libsqlite3)
 ```
 # Ex. Debian
 sudo apt update
-sudo apt install default-libmysqlclient-dev
-cargo install diesel_cli --no-default-features --features mysql
+sudo apt install default-libmysqlclient-dev libsqlite3 
+cargo install diesel_cli --no-default-features --features mysql,sqlite
 ```
+
+libtirpc-dev required when building with mysql-bundle feature.
 
 ## Run in development 
 Create a .env file with DATABASE_URL pointing to your mariadb server

@@ -1,14 +1,13 @@
-use serde::{Deserialize, Serialize};
-use crate::models::DbError;
 use crate::models::user::uuid_validator;
+use crate::models::DbError;
+use serde::{Deserialize, Serialize};
 
-use diesel::{
-    BoolExpressionMethods, ExpressionMethods, Identifiable, Insertable,
-    OptionalExtension, QueryDsl, Queryable,
-    RunQueryDsl,
-};
 use crate::storage::DbConnection;
 use chrono::NaiveDateTime;
+use diesel::{
+    BoolExpressionMethods, ExpressionMethods, Identifiable, Insertable, OptionalExtension,
+    QueryDsl, Queryable, RunQueryDsl,
+};
 
 use crate::schema::users;
 use crate::schema::users::dsl::users as all_users;
@@ -38,30 +37,27 @@ pub struct NewUser {
 }
 
 impl User {
-
     pub fn insert_new_user_config(
         conn: &mut DbConnection,
         new_user: NewUser,
     ) -> Result<(), DbError> {
-
         match conn {
             #[cfg(feature = "mysql")]
             DbConnection::Mysql(ref mut conn) => {
                 diesel::insert_into(all_users)
-                .values(&new_user)
-                .execute(conn)?;
-            },
+                    .values(&new_user)
+                    .execute(conn)?;
+            }
             #[cfg(feature = "sqlite")]
             DbConnection::Sqlite(ref mut conn) => {
                 diesel::insert_into(all_users)
-                .values(&new_user)
-                .execute(conn)?;
+                    .values(&new_user)
+                    .execute(conn)?;
             }
         }
 
         Ok(())
     }
-
 
     pub fn get_user_by_token(
         conn: &mut DbConnection,

@@ -1,17 +1,16 @@
 extern crate diesel;
 use std::error::Error;
 
-use diesel::prelude::*;
 #[cfg(feature = "mysql")]
 use diesel::mysql::Mysql;
+use diesel::prelude::*;
 #[cfg(feature = "sqlite")]
 use diesel::sqlite::Sqlite;
 
-
 extern crate diesel_migrations;
+use diesel::r2d2::{ConnectionManager, Pool};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use log::info;
-use diesel::r2d2::{Pool, ConnectionManager};
 
 use crate::app_config::MappedAppConfig;
 use crate::env;
@@ -32,8 +31,6 @@ pub enum DbConnection {
 
 pub type DbPool = Pool<ConnectionManager<DbConnection>>;
 
-
-
 #[derive(Clone)]
 pub struct Storage {
     url: String,
@@ -41,7 +38,8 @@ pub struct Storage {
 
 impl Storage {
     pub fn new() -> Self {
-        let database_url = env::var(env::ENV_DATABASE_URL).unwrap_or("mysql://tabby:tabby@db/tabby".to_string());
+        let database_url =
+            env::var(env::ENV_DATABASE_URL).unwrap_or("mysql://tabby:tabby@db/tabby".to_string());
         Storage { url: database_url }
     }
 
@@ -57,11 +55,11 @@ impl Storage {
             #[cfg(feature = "mysql")]
             DbConnection::Mysql(ref mut conn) => {
                 run_mysql_migrations(conn)?;
-            },
+            }
             #[cfg(feature = "sqlite")]
             DbConnection::Sqlite(ref mut conn) => {
                 run_sqlite_migrations(conn)?;
-            }            
+            }
         }
 
         Ok(())
@@ -79,7 +77,7 @@ impl Storage {
 
     pub fn pool(&self) -> Result<DbPool, error::StorageError> {
         let pool = Pool::new(ConnectionManager::new(self.url().clone()))?;
-        
+
         Ok(pool)
     }
 }
@@ -109,5 +107,15 @@ fn run_sqlite_migrations(
 }
 
 pub fn establish_connection(url: &str) -> Result<DbConnection, diesel::ConnectionError> {
+    #[cfg(feature = "mysql")]
+    if url.starts_with("mysql://") {
+        return Ok(DbConnection::Mysql(MysqlConnection::establish(url)?));
+    }
+
+    #[cfg(feature = "sqlite")]
+    if url.starts_with("sqlite://") {
+        return Ok(DbConnection::Sqlite(SqliteConnection::establish(url)?));
+    }
+
     DbConnection::establish(url)
 }

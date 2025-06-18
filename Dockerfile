@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM rust:1.76-alpine AS builder
+FROM rust:alpine AS builder
 ARG FEATURE_FLAGS="-F|mysql-bundle|-F|all-login"
 WORKDIR /build
 COPY . .
@@ -7,14 +7,7 @@ COPY . .
 RUN apk add --no-cache build-base
 
 RUN if [[ "$FEATURE_FLAGS" == *"mysql-bundle"* ]]; then \
-        apk add --no-cache binutils mariadb-dev musl-dev bash cmake curl && \
-        bash scripts/mariadb-static-build.sh && \ 
-        bash scripts/zlib-static-build.sh && \
-        ar x lib/libmysqlclient.a && \
-        ar x /lib/libz.a && \
-        ar x /usr/lib/libc.a && \
-        ar rcs /build/lib/libmysqlclient.a *.o *.lo && \
-        rm -rf *.o *.lo; \
+        apk add --no-cache cmake libtirpc-dev ncurses-dev perl ; \
     fi
 
 RUN if [[ "$FEATURE_FLAGS" == *"login"* ]]; then \
