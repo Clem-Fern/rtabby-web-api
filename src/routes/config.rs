@@ -3,7 +3,9 @@ use actix_web_httpauth::extractors::bearer::BearerAuth;
 
 use crate::storage::DbPool;
 
-use crate::models::config::{Config, ConfigWithoutUser, ConfigWithoutUserAndContent, NewConfig, UpdateConfig};
+use crate::models::config::{
+    Config, ConfigWithoutUser, ConfigWithoutUserAndContent, NewConfig, UpdateConfig,
+};
 
 #[get("/configs")]
 async fn show_configs(auth: BearerAuth, pool: web::Data<DbPool>) -> Result<HttpResponse, Error> {

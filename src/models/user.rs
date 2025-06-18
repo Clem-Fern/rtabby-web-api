@@ -15,9 +15,7 @@ pub struct UserWithoutToken {
 
 impl From<LocalUser> for UserWithoutToken {
     fn from(user: LocalUser) -> Self {
-        UserWithoutToken {
-            name: user.name,
-        }
+        UserWithoutToken { name: user.name }
     }
 }
 

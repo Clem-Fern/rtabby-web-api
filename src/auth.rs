@@ -15,9 +15,9 @@ pub async fn bearer_auth_validator(
         .clone()
         .into_keys()
         .collect();
-    
+
     let token = String::from(credentials.token());
-    
+
     if users.contains(&token) {
         return Ok(req);
     }

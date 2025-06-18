@@ -1,5 +1,5 @@
 use crate::login::error::OauthError;
-use crate::login::providers::{get_user_info, get_access_token, OauthInfo, OauthUserInfo};
+use crate::login::providers::{get_access_token, get_user_info, OauthInfo, OauthUserInfo};
 use actix_web::http::uri::Scheme;
 use serde::Deserialize;
 
@@ -8,8 +8,10 @@ pub mod env {
     pub const ENV_MICROSOFT_APP_CLIENT_SECRET: &str = "MICROSOFT_APP_CLIENT_SECRET";
 }
 
-pub const MICROSOFT_OAUTH_AUTHORIZE_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize";
-pub const MICROSOFT_OAUTH_ACCESS_TOKEN_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token";
+pub const MICROSOFT_OAUTH_AUTHORIZE_URL: &str =
+    "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize";
+pub const MICROSOFT_OAUTH_ACCESS_TOKEN_URL: &str =
+    "https://login.microsoftonline.com/consumers/oauth2/v2.0/token";
 pub const MICROSOFT_OAUTH_USER_INFO_URL: &str = "https://graph.microsoft.com/v1.0/me";
 
 #[derive(Debug, Deserialize)]
@@ -18,7 +20,6 @@ pub struct MicrosoftOauthUserInfo {
     #[serde(rename = "displayName")]
     display_name: String,
 }
-
 
 impl From<MicrosoftOauthUserInfo> for OauthUserInfo {
     fn from(val: MicrosoftOauthUserInfo) -> Self {
@@ -29,8 +30,26 @@ impl From<MicrosoftOauthUserInfo> for OauthUserInfo {
     }
 }
 
-pub async fn user_info(scheme: Scheme, oauth: &OauthInfo, host: String, code: String) -> Result<MicrosoftOauthUserInfo, OauthError> {
+pub async fn user_info(
+    scheme: Scheme,
+    oauth: &OauthInfo,
+    host: String,
+    code: String,
+) -> Result<MicrosoftOauthUserInfo, OauthError> {
     let redirect_uri = format!("{}://{}/login/microsoft/callback", scheme, host);
-    let token = get_access_token(MICROSOFT_OAUTH_ACCESS_TOKEN_URL, code, oauth.client_id.clone(), oauth.client_secret.clone(), "authorization_code", Some(redirect_uri)).await?;
-    get_user_info(MICROSOFT_OAUTH_USER_INFO_URL, token).await.map_err(OauthError::UserInfo)?.json::<MicrosoftOauthUserInfo>().await.map_err(OauthError::UserInfo)
+    let token = get_access_token(
+        MICROSOFT_OAUTH_ACCESS_TOKEN_URL,
+        code,
+        oauth.client_id.clone(),
+        oauth.client_secret.clone(),
+        "authorization_code",
+        Some(redirect_uri),
+    )
+    .await?;
+    get_user_info(MICROSOFT_OAUTH_USER_INFO_URL, token)
+        .await
+        .map_err(OauthError::UserInfo)?
+        .json::<MicrosoftOauthUserInfo>()
+        .await
+        .map_err(OauthError::UserInfo)
 }

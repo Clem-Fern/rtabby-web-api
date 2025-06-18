@@ -7,10 +7,10 @@ pub mod google;
 #[cfg(feature = "microsoft-login")]
 pub mod microsoft;
 
+use super::error::OauthError;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt;
-use super::error::OauthError;
 
 use actix_web::http::uri::Scheme;
 
@@ -72,11 +72,19 @@ impl Provider {
         }
     }
 
-    fn get_login_url_params(&self, scheme: Scheme, host: String, state: String) -> Vec<(&str, String)> {
+    fn get_login_url_params(
+        &self,
+        scheme: Scheme,
+        host: String,
+        state: String,
+    ) -> Vec<(&str, String)> {
         let mut params = vec![
             ("client_id", self.get_oauth_info().client_id),
             ("state", state),
-            ("redirect_uri", format!("{}://{}/login/{}/callback", scheme, host, self.name())),
+            (
+                "redirect_uri",
+                format!("{}://{}/login/{}/callback", scheme, host, self.name()),
+            ),
         ];
 
         #[cfg(feature = "github-login")]
@@ -91,21 +99,23 @@ impl Provider {
             }
             #[cfg(feature = "google-login")]
             Self::Google(_) => {
-                params.push(("scope", "https://www.googleapis.com/auth/userinfo.profile".to_string()));
-            },
+                params.push((
+                    "scope",
+                    "https://www.googleapis.com/auth/userinfo.profile".to_string(),
+                ));
+            }
             #[cfg(feature = "microsoft-login")]
             Self::Microsoft(_) => {
                 params.push(("scope", "https://graph.microsoft.com/User.Read".to_string()));
-            },
+            }
             #[cfg(feature = "github-login")]
-            _ => {},
+            _ => {}
         }
 
         params
     }
 
     pub fn get_login_url(&self, scheme: Scheme, host: String, state: String) -> String {
-
         let params = self.get_login_url_params(scheme, host, state);
 
         let oauth_url = match self {
@@ -119,11 +129,18 @@ impl Provider {
             Self::Microsoft(_) => microsoft::MICROSOFT_OAUTH_AUTHORIZE_URL,
         };
 
-        reqwest::Url::parse_with_params(oauth_url, params).unwrap().to_string()
+        reqwest::Url::parse_with_params(oauth_url, params)
+            .unwrap()
+            .to_string()
     }
 
     #[allow(unused_variables)]
-    pub async fn get_user_info(&self, scheme: Scheme, host: String, token: String) -> Result<ThirdPartyUserInfo, OauthError> {
+    pub async fn get_user_info(
+        &self,
+        scheme: Scheme,
+        host: String,
+        token: String,
+    ) -> Result<ThirdPartyUserInfo, OauthError> {
         let user_info: OauthUserInfo = match self {
             #[cfg(feature = "github-login")]
             Self::Github(oauth) => github::user_info(oauth, token).await?.into(),
@@ -132,7 +149,9 @@ impl Provider {
             #[cfg(feature = "google-login")]
             Self::Google(oauth) => google::user_info(scheme, oauth, host, token).await?,
             #[cfg(feature = "microsoft-login")]
-            Self::Microsoft(oauth) => microsoft::user_info(scheme, oauth, host, token).await?.into(),
+            Self::Microsoft(oauth) => microsoft::user_info(scheme, oauth, host, token)
+                .await?
+                .into(),
         };
 
         Ok(ThirdPartyUserInfo {
@@ -141,7 +160,6 @@ impl Provider {
             platform: self.name(),
         })
     }
-
 }
 
 impl From<Provider> for Platform {
@@ -207,9 +225,14 @@ async fn get_access_token(
         .form(&map)
         .header("Accept", "application/json")
         .send()
-        .await.map_err(OauthError::AccessToken)?;
+        .await
+        .map_err(OauthError::AccessToken)?;
 
-    Ok(res.json::<Body>().await.map_err(OauthError::AccessToken)?.access_token)
+    Ok(res
+        .json::<Body>()
+        .await
+        .map_err(OauthError::AccessToken)?
+        .access_token)
 }
 
 #[derive(Debug, Deserialize)]

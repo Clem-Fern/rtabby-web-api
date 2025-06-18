@@ -1,7 +1,7 @@
+use diesel::r2d2;
 use std::error;
 use std::fmt;
 use std::io;
-use diesel::r2d2;
 
 use crate::models::DbError;
 
@@ -11,7 +11,7 @@ pub enum StorageError {
     R2d2(r2d2::PoolError),
     #[allow(dead_code)]
     Db(DbError),
-    DbConnection(diesel::ConnectionError)
+    DbConnection(diesel::ConnectionError),
 }
 
 impl error::Error for StorageError {}
@@ -19,10 +19,18 @@ impl error::Error for StorageError {}
 impl fmt::Display for StorageError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Migration(ref err) => write!(f, "Failed to initialize databse storage (diesel migrations): {err}"),
-            Self::R2d2(ref err) => write!(f, "Failed to initialize database storage (r2d2 pool manager): {err}"),
+            Self::Migration(ref err) => write!(
+                f,
+                "Failed to initialize databse storage (diesel migrations): {err}"
+            ),
+            Self::R2d2(ref err) => write!(
+                f,
+                "Failed to initialize database storage (r2d2 pool manager): {err}"
+            ),
             Self::Db(ref err) => write!(f, "Encountered error on database query: {err}"),
-            Self::DbConnection(ref err) => write!(f, "Encountered error on database connection: {err}"),
+            Self::DbConnection(ref err) => {
+                write!(f, "Encountered error on database connection: {err}")
+            }
         }
     }
 }
@@ -54,7 +62,7 @@ impl From<diesel::result::Error> for StorageError {
 #[derive(Debug)]
 pub enum TlsError {
     Io(io::Error),
-    Rustls(rustls::Error)
+    Rustls(rustls::Error),
 }
 
 impl error::Error for TlsError {}
@@ -62,8 +70,14 @@ impl error::Error for TlsError {}
 impl fmt::Display for TlsError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::Io(ref err) => write!(f, "Encountered IO error while building tls configuration: {err}"),
-            Self::Rustls(ref err) => write!(f, "Encountered Rustls error while building tls configuration: {err}"),
+            Self::Io(ref err) => write!(
+                f,
+                "Encountered IO error while building tls configuration: {err}"
+            ),
+            Self::Rustls(ref err) => write!(
+                f,
+                "Encountered Rustls error while building tls configuration: {err}"
+            ),
         }
     }
 }
