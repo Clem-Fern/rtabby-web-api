@@ -19,7 +19,7 @@ mod schema;
 extern crate serde_yaml;
 
 extern crate actix_web;
-use actix_web::{middleware, web, App, HttpServer};
+use actix_web::{middleware, web, App, HttpResponse, HttpServer};
 
 #[cfg(feature = "third-party-login")]
 mod login;
@@ -110,11 +110,12 @@ async fn run_app() -> Result<(), Box<dyn Error>> {
         #[cfg(feature = "third-party-login")]
         if !providers_config.available_providers.is_empty() {
             return app.app_data(web::Data::new(providers_config.clone()))
-                .configure(login::services::login_config);
+                .configure(login::services::login_config)
+                .service(web::redirect("/", "/login"));
         }
         
         #[allow(clippy::let_and_return)]
-        app
+        app.service(web::resource("/").route(web::get().to(|| HttpResponse::Ok())))
 
     });
 
