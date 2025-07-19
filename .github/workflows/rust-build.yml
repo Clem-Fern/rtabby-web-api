@@ -37,6 +37,10 @@ jobs:
             minimal: false
             feature: '-F all-login'
 
+    permissions:
+      contents: read
+      packages: write
+
     runs-on: ${{ matrix.runson }}
     steps:
     - uses: actions/checkout@v4
