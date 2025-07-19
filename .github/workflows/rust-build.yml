@@ -1,11 +1,10 @@
-name: rTabby
+name: rust-build
 
 on:
   push:
-    branches: [ "master" ]
-    tags: [ 'v*.*.*' ]
+    branches: [ "master", "dev" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "dev" ]
   release:
       types: [published]
 
