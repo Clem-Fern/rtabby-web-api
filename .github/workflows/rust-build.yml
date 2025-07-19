@@ -41,6 +41,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install mysql build dependencies
+      if: ${{ matrix.db == 'mysql' }}
+      run: sudo apt install libtirpc-dev
+
     - name: Build
       run: cargo build --verbose --release --target-dir target/ci --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }}
 
