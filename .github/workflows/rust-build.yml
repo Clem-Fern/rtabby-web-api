@@ -117,7 +117,7 @@ jobs:
         cache-to: type=gha,mode=max
         build-args: |
           GIT_COMMIT=${{ steps.prep.outputs.GIT_COMMIT }}
-          GH_WORKSPACE= ${{ github.workspace }}
+          GH_WORKSPACE=${{ github.workspace }}
 
     # Sign the resulting Docker image digest except on PRs.
     # This will only write to the public Rekor transparency log when the Docker
