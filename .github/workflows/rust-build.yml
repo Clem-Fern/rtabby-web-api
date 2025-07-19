@@ -25,7 +25,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: cargo build --verbose ${{ github.event_name == 'release' && '--release' || '' }} --target-dir target/ci
+      run: cargo build --verbose --release --target-dir target/ci
     - uses: actions/upload-artifact@v4
       # if: ${{ github.event_name == 'release' }}
       with:
