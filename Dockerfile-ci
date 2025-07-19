@@ -5,9 +5,9 @@ ARG GH_WORKSPACE
 
 WORKDIR /config
 
-COPY ${GH_WORKSPACE}/target/docker/release/rtabby-web-api /
-COPY ${GH_WORKSPACE}/users.exemple.yml .
-COPY ${GH_WORKSPACE}/web/ /www/web/
+COPY $GH_WORKSPACE/target/docker/release/rtabby-web-api /
+COPY $GH_WORKSPACE/users.exemple.yml .
+COPY $GH_WORKSPACE/web/ /www/web/
 ENV STATIC_FILES_BASE_DIR=/www/web/
 ENV GIT_COMMIT=$GIT_COMMIT
 
