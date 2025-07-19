@@ -4,7 +4,7 @@ ARG GIT_COMMIT
 
 WORKDIR /config
 
-COPY target/ci/release/rtabby-web-api /
+COPY ci-build/release/rtabby-web-api /
 COPY users.exemple.yml .
 COPY web/ /www/web/
 ENV STATIC_FILES_BASE_DIR=/www/web/
