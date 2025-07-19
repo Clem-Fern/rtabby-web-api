@@ -21,6 +21,20 @@ jobs:
     strategy:
       matrix:
         runson: [ubuntu-latest, ubuntu-24.04-arm]
+        db-backend: [mysql, sqlite]
+        login: [local-users, oauth]
+        include:
+          #arch
+          - runson: 'ubuntu-latest'
+            arch: 'amd64'
+          - runson: 'ubuntu-24.04-arm'
+            arch: 'arm64'
+          # minimal build
+          - login: 'local-users'
+            minimal: true
+          - login: 'oauth'
+            minimal: false
+
     runs-on: ${{ matrix.runson }}
     steps:
     - uses: actions/checkout@v4
@@ -29,5 +43,5 @@ jobs:
     - uses: actions/upload-artifact@v4
       # if: ${{ github.event_name == 'release' }}
       with:
-        name: ${{ github.repository }}-${{ matrix.runson }}
+        name: ${{ github.repository }}-${{ matrix.arch }}
         path: target/ci/release/rtabby-web-api
