@@ -1,0 +1,13 @@
+# syntax=docker/dockerfile:1
+FROM scratch
+ARG GIT_COMMIT
+
+WORKDIR /config
+
+COPY target/docker/release/rtabby-web-api /
+COPY users.exemple.yml .
+COPY web/ /www/web/
+ENV STATIC_FILES_BASE_DIR=/www/web/
+ENV GIT_COMMIT=$GIT_COMMIT
+
+CMD ["/rtabby-web-api"]

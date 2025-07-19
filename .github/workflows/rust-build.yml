@@ -17,31 +17,30 @@ env:
 
 jobs:
   build:
-    name: Rust Build
+    name: Rust/Docker Build
     strategy:
       matrix:
-        arch: [x64, arm64]
-        db-backend: [mysql, sqlite]
+        arch: [amd64, arm64]
+        db: [mysql, sqlite]
         login: [local-users, oauth]
         include:
           #runson
-          - arch: 'x64'
+          - arch: 'amd64'
             runson: 'ubuntu-latest'
           - arch: 'arm64'
             runson: 'ubuntu-24.04-arm'
           # minimal build
           - login: 'local-users'
             minimal: true
+            feature: ''
           - login: 'oauth'
             minimal: false
+            feature: '-F all-login'
 
     runs-on: ${{ matrix.runson }}
     steps:
     - uses: actions/checkout@v4
+
     - name: Build
-      run: cargo build --verbose --release --target-dir target/ci
-    - uses: actions/upload-artifact@v4
-      # if: ${{ github.event_name == 'release' }}
-      with:
-        name: ${{ github.repository }}-${{ matrix.arch }}
-        path: target/ci/release/rtabby-web-api
+      run: cargo build --verbose --release --target-dir target/ci --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }}
+
