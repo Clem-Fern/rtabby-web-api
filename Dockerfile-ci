@@ -1,7 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM scratch
 ARG GIT_COMMIT
-ARG GH_WORKSPACE
 
 WORKDIR /config
 
