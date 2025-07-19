@@ -20,15 +20,15 @@ jobs:
     name: Rust Build
     strategy:
       matrix:
-        runson: [ubuntu-latest, ubuntu-24.04-arm]
+        arch: [x64, arm64]
         db-backend: [mysql, sqlite]
         login: [local-users, oauth]
         include:
-          #arch
-          - runson: 'ubuntu-latest'
-            arch: 'amd64'
-          - runson: 'ubuntu-24.04-arm'
-            arch: 'arm64'
+          #runson
+          - arch: 'x64'
+            runson: 'ubuntu-latest'
+          - arch: 'arm64'
+            runson: 'ubuntu-24.04-arm'
           # minimal build
           - login: 'local-users'
             minimal: true
