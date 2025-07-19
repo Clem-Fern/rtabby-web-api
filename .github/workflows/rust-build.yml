@@ -46,7 +46,7 @@ jobs:
       run: sudo apt install libtirpc-dev
 
     - name: Build
-      run: cargo build --verbose --release --target-dir target/ci --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }}
+      run: cargo build --verbose --release --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }}
 
     # Install the cosign tool except on PR
     # https://github.com/sigstore/cosign-installer
