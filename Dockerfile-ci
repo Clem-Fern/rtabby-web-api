@@ -5,7 +5,7 @@ ARG TARGETPLATFORM
 
 WORKDIR /config
 
-COPY binary/$TARGETPLATFORM/rtabby-web-api /
+COPY --chmod=100 binary/$TARGETPLATFORM/rtabby-web-api /
 COPY users.exemple.yml .
 COPY web/ /www/web/
 ENV STATIC_FILES_BASE_DIR=/www/web/
