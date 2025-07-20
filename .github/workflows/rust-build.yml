@@ -51,7 +51,7 @@ jobs:
       run: sudo apt install libtirpc-dev
 
     - name: Build
-      run: cargo build --verbose --release --target ${{ matrix.rust-target }} --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
+      run: cargo build --verbose --release --target=musl --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
 
     - name: Upload build binary
       uses: actions/upload-artifact@v4
