@@ -101,9 +101,7 @@ jobs:
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
         # if: ${{ github.event_name == 'release' }}
-        uses: sigstore/cosign-installer@v3.5.0
-        with:
-          cosign-release: 'v2.2.4'
+        uses: sigstore/cosign-installer@v3.9.2
 
       - name: Set up QEMU
         # if: ${{ github.event_name == 'release' }}
@@ -165,7 +163,8 @@ jobs:
           context: .
           file: Dockerfile-ci
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'release' }}
+          push: true
+          # push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
