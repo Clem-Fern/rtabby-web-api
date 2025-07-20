@@ -27,8 +27,10 @@ jobs:
           #runson
           - arch: 'amd64'
             runson: 'ubuntu-latest'
+            rust-target: 'x86_64-unknown-linux-musl'
           - arch: 'arm64'
             runson: 'ubuntu-24.04-arm'
+            rust-target: 'aarch64-unknown-linux-musl'
           # minimal build
           - login: 'local-users'
             minimal: true
@@ -49,7 +51,7 @@ jobs:
       run: sudo apt install libtirpc-dev
 
     - name: Build
-      run: cargo build --verbose --release --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }}
+      run: cargo build --verbose --release --target ${{ matrix.rust-target }}--target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
 
     - name: Upload build binary
       uses: actions/upload-artifact@v4
