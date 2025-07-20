@@ -52,7 +52,7 @@ jobs:
 
     - name: Install rust target
       run: |
-        sudo apt install musl-dev
+        sudo apt install musl-dev musl-tools
         rustup target add ${{ matrix.rust-target }}
 
     - name: Build
