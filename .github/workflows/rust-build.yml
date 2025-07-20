@@ -48,10 +48,12 @@ jobs:
 
     - name: Install mysql build dependencies
       if: ${{ matrix.db == 'mysql' }}
-      run: sudo apt install libtirpc-dev
+      run: sudo apt install libtirpc-dev 
 
     - name: Install rust target
-      run: rustup target add ${{ matrix.rust-target }}
+      run: |
+        sudo apt install musl-gcc
+        rustup target add ${{ matrix.rust-target }}
 
     - name: Build
       run: cargo build --verbose --release --target ${{ matrix.rust-target }} --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
