@@ -52,7 +52,7 @@ jobs:
 
     - name: Build
       run: |
-        sudo apt install gcc musl-tools libstdc++-12-dev
+        sudo apt install gcc musl-tools musl-gcc
         rustup target add ${{ matrix.rust-target }}
         cargo build --verbose --release --target ${{ matrix.rust-target }} --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
 
