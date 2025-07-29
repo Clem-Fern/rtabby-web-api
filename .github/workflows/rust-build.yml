@@ -28,11 +28,11 @@ jobs:
           - arch: 'amd64'
             runson: 'ubuntu-22.04'
             rust-target: 'x86_64-unknown-linux-musl'
-            rust-cc: 'x86_64-linux-musl-gcc'
+            rust-cc: 'x86_64-linux-musl'
           - arch: 'arm64'
             runson: 'ubuntu-22.04-arm'
             rust-target: 'aarch64-unknown-linux-musl'
-            rust-cc: 'aarch64-linux-musl-gcc'
+            rust-cc: 'aarch64-linux-musl'
           # minimal build
           - login: 'local-users'
             minimal: true
@@ -55,8 +55,9 @@ jobs:
     - name: Build
       run: |
         sudo apt install gcc musl-tools musl-dev
+        sudo ln -s /usr/bin/${{ matrix.rust-cc }}-gcc /usr/bin/${{ matrix.rust-cc }}-g++
         rustup target add ${{ matrix.rust-target }}
-        TARGET_CC=${{ matrix.rust-cc }} cargo build --verbose --release --target ${{ matrix.rust-target }} --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
+        cargo build --verbose --release --target ${{ matrix.rust-target }} --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
 
     - name: Upload build binary
       uses: actions/upload-artifact@v4
