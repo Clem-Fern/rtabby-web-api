@@ -49,8 +49,7 @@ jobs:
       run: sudo apt install libtirpc-dev 
 
     - name: Build
-      run: |
-        cargo build --verbose --release --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
+      run: cargo build --verbose --release --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
 
     - name: Upload build binary
       uses: actions/upload-artifact@v4
@@ -101,11 +100,11 @@ jobs:
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
-        # if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' }}
         uses: sigstore/cosign-installer@v3.9.2
 
       - name: Set up QEMU
-        # if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' }}
         uses: docker/setup-qemu-action@v3
 
       # Set up BuildKit Docker container builder to be able to build
@@ -117,7 +116,7 @@ jobs:
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}
-        # if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' }}
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -164,8 +163,7 @@ jobs:
           context: .
           file: Dockerfile-ci
           platforms: linux/amd64,linux/arm64
-          push: true
-          # push: ${{ github.event_name == 'release' }}
+          push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -180,7 +178,7 @@ jobs:
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
       - name: Sign the published Docker image
-        # if: ${{ github.event_name == 'release' }}
+        if: ${{ github.event_name == 'release' }}
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}
