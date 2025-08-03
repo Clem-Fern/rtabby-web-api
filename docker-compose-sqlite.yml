@@ -18,9 +18,6 @@ services:
     # If running as root, setup your user/volume owner UID and GID
     #user: "1000:1000"
 
-    cap_add:		
-      - "CAP_DAC_OVERRIDE"
-    cap_drop: ['ALL']
     read_only: true
 
     ports:

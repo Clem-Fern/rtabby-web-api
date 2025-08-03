@@ -1,0 +1,14 @@
+# syntax=docker/dockerfile:1
+FROM debian:bookworm-slim
+ARG GIT_COMMIT
+ARG TARGETPLATFORM
+
+WORKDIR /config
+
+COPY --chmod=100 binary/$TARGETPLATFORM/rtabby-web-api /
+COPY users.exemple.yml .
+COPY web/ /www/web/
+ENV STATIC_FILES_BASE_DIR=/www/web/
+ENV GIT_COMMIT=$GIT_COMMIT
+
+CMD ["/rtabby-web-api"]

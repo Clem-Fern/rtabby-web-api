@@ -1,11 +1,10 @@
-name: rTabby
+name: rust-build
 
 on:
   push:
-    branches: [ "master" ]
-    tags: [ 'v*.*.*' ]
+    branches: [ "master", "dev" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "dev" ]
   release:
       types: [published]
 
@@ -19,19 +18,58 @@ env:
 jobs:
   build:
     name: Rust Build
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [amd64, arm64]
+        db: [mysql, sqlite]
+        login: [local-users, oauth]
+        include:
+          #runson
+          - arch: 'amd64'
+            runson: 'ubuntu-22.04'
+          - arch: 'arm64'
+            runson: 'ubuntu-22.04-arm'
+          # minimal build
+          - login: 'local-users'
+            minimal: true
+            feature: ''
+          - login: 'oauth'
+            minimal: false
+            feature: '-F all-login'
+
+    permissions:
+      contents: read
+
+    runs-on: ${{ matrix.runson }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
+    - name: Install mysql build dependencies
+      if: ${{ matrix.db == 'mysql' }}
+      run: sudo apt install libtirpc-dev 
+
     - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      run: cargo build --verbose --release --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
+
+    - name: Upload build binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.arch }}-${{ matrix.db }}-${{ matrix.login }}-rtabby-web-api
+        path: ci-build/release/rtabby-web-api
 
   docker:
     strategy:
       matrix:
         db: [mysql, sqlite]
-        minimal: [true, false]
+        login: [local-users, oauth]
+        include:
+          # minimal build
+          - login: 'local-users'
+            minimal: true
+            feature: ''
+          - login: 'oauth'
+            minimal: false
+            feature: '-F all-login'
     name: Docker
     if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
     needs: [build]
@@ -47,13 +85,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Download amd64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: amd64-${{ matrix.db }}-${{ matrix.login }}-rtabby-web-api
+          path: binary/linux/amd64/rtabby-web-api
+
+      - name: Download arm64 binary
+        uses: actions/download-artifact@v4
+        with:
+          name: arm64-${{ matrix.db }}-${{ matrix.login }}-rtabby-web-api
+          path: binary/linux/arm64/rtabby-web-api
+
       # Install the cosign tool except on PR
       # https://github.com/sigstore/cosign-installer
       - name: Install cosign
         if: ${{ github.event_name == 'release' }}
-        uses: sigstore/cosign-installer@v3.5.0
-        with:
-          cosign-release: 'v2.2.4'
+        uses: sigstore/cosign-installer@v3.9.2
 
       - name: Set up QEMU
         if: ${{ github.event_name == 'release' }}
@@ -113,7 +161,8 @@ jobs:
         uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
         with:
           context: .
-          platforms: linux/amd64${{ github.event_name == 'release' && ',linux/arm64' || '' }}
+          file: Dockerfile-ci
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
