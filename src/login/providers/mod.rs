@@ -6,6 +6,8 @@ pub mod gitlab;
 pub mod google;
 #[cfg(feature = "microsoft-login")]
 pub mod microsoft;
+#[cfg(feature = "oidc-login")]
+pub mod oidc;
 
 use super::error::OauthError;
 use serde::{Deserialize, Serialize};
@@ -22,6 +24,7 @@ pub struct OauthInfo {
 
 #[derive(Debug, Deserialize)]
 pub struct OauthUserInfo<I = String, N = String> {
+    #[serde(rename = "sub")] // "id" is called "sub" in the OIDC speficication
     id: I,
     name: N,
 }
@@ -52,6 +55,8 @@ pub enum Provider {
     Google(OauthInfo),
     #[cfg(feature = "microsoft-login")]
     Microsoft(OauthInfo),
+    #[cfg(feature = "oidc-login")]
+    Oidc(OauthInfo),
 }
 
 impl Provider {
@@ -69,6 +74,8 @@ impl Provider {
             Self::Google(oauth) => oauth.clone(),
             #[cfg(feature = "microsoft-login")]
             Self::Microsoft(oauth) => oauth.clone(),
+            #[cfg(feature = "oidc-login")]
+            Self::Oidc(oauth) => oauth.clone(),
         }
     }
 
@@ -108,6 +115,10 @@ impl Provider {
             Self::Microsoft(_) => {
                 params.push(("scope", "https://graph.microsoft.com/User.Read".to_string()));
             }
+            #[cfg(feature = "oidc-login")]
+            Self::Oidc(_) => {
+                params.push(("scope", "profile openid".to_string()));
+            }
             #[cfg(feature = "github-login")]
             _ => {}
         }
@@ -115,8 +126,14 @@ impl Provider {
         params
     }
 
-    pub fn get_login_url(&self, scheme: Scheme, host: String, state: String) -> String {
+    pub async fn get_login_url(
+        &self,
+        scheme: Scheme,
+        host: String,
+        state: String,
+    ) -> Result<String, OauthError> {
         let params = self.get_login_url_params(scheme, host, state);
+        let oidc_config = oidc::get_oidc_config().await?;
 
         let oauth_url = match self {
             #[cfg(feature = "github-login")]
@@ -127,11 +144,15 @@ impl Provider {
             Self::Google(_) => google::GOOGLE_OAUTH_AUTHORIZE_URL,
             #[cfg(feature = "microsoft-login")]
             Self::Microsoft(_) => microsoft::MICROSOFT_OAUTH_AUTHORIZE_URL,
+            #[cfg(feature = "oidc-login")]
+            Self::Oidc(_) => &oidc_config.authorization_endpoint,
         };
 
-        reqwest::Url::parse_with_params(oauth_url, params)
+        let url = reqwest::Url::parse_with_params(oauth_url, params)
             .unwrap()
-            .to_string()
+            .to_string();
+
+        Ok(url.to_string())
     }
 
     #[allow(unused_variables)]
@@ -152,6 +173,8 @@ impl Provider {
             Self::Microsoft(oauth) => microsoft::user_info(scheme, oauth, host, token)
                 .await?
                 .into(),
+            #[cfg(feature = "oidc-login")]
+            Self::Oidc(oauth) => oidc::user_info(scheme, oauth, host, token).await?.into(),
         };
 
         Ok(ThirdPartyUserInfo {
@@ -182,6 +205,8 @@ impl fmt::Display for Provider {
             Self::Google(_) => write!(f, "Google"),
             #[cfg(feature = "microsoft-login")]
             Self::Microsoft(_) => write!(f, "Microsoft"),
+            #[cfg(feature = "oidc-login")]
+            Self::Oidc(_) => write!(f, "OIDC"),
         }
     }
 }
