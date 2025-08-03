@@ -27,12 +27,8 @@ jobs:
           #runson
           - arch: 'amd64'
             runson: 'ubuntu-22.04'
-            rust-target: 'x86_64-unknown-linux-musl'
-            rust-cc: 'x86_64-linux-musl'
           - arch: 'arm64'
             runson: 'ubuntu-22.04-arm'
-            rust-target: 'aarch64-unknown-linux-musl'
-            rust-cc: 'aarch64-linux-musl'
           # minimal build
           - login: 'local-users'
             minimal: true
@@ -54,10 +50,7 @@ jobs:
 
     - name: Build
       run: |
-        sudo apt install gcc musl-tools musl-dev
-        sudo ln -s /usr/bin/${{ matrix.rust-cc }}-gcc /usr/bin/${{ matrix.rust-cc }}-g++
-        rustup target add ${{ matrix.rust-target }}
-        cargo build --verbose --release --target ${{ matrix.rust-target }} --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
+        cargo build --verbose --release --target-dir ci-build --no-default-features -F ${{ matrix.db }}-bundle ${{ matrix.feature }} 
 
     - name: Upload build binary
       uses: actions/upload-artifact@v4
@@ -124,7 +117,7 @@ jobs:
       # Login against a Docker registry except on PR
       # https://github.com/docker/login-action
       - name: Log into registry ${{ env.REGISTRY }}
-        if: ${{ github.event_name == 'release' }}
+        # if: ${{ github.event_name == 'release' }}
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -171,7 +164,8 @@ jobs:
           context: .
           file: Dockerfile-ci
           platforms: linux/amd64,linux/arm64
-          push: ${{ github.event_name == 'release' }}
+          push: true
+          # push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -186,7 +180,7 @@ jobs:
       # transparency data even for private images, pass --force to cosign below.
       # https://github.com/sigstore/cosign
       - name: Sign the published Docker image
-        if: ${{ github.event_name == 'release' }}
+        # if: ${{ github.event_name == 'release' }}
         env:
           # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-an-intermediate-environment-variable
           TAGS: ${{ steps.meta.outputs.tags }}
