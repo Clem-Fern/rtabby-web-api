@@ -18,6 +18,8 @@ use providers::gitlab;
 use providers::google;
 #[cfg(feature = "microsoft-login")]
 use providers::microsoft;
+#[cfg(feature = "oidc-login")]
+use providers::oidc;
 
 use self::providers::OauthInfo;
 
@@ -91,6 +93,16 @@ pub fn get_provider_config() -> ProvidersConfig {
         available_providers.push(providers::Provider::Microsoft(OauthInfo {
             client_id: app_env::var(microsoft::env::ENV_MICROSOFT_APP_CLIENT_ID).unwrap(),
             client_secret: app_env::var(microsoft::env::ENV_MICROSOFT_APP_CLIENT_SECRET).unwrap(),
+        }));
+    }
+
+    #[cfg(feature = "oidc-login")]
+    if app_env::var(oidc::env::ENV_OIDC_APP_CLIENT_ID).is_ok()
+        && app_env::var(oidc::env::ENV_OIDC_APP_CLIENT_SECRET).is_ok()
+    {
+        available_providers.push(providers::Provider::Oidc(OauthInfo {
+            client_id: app_env::var(oidc::env::ENV_OIDC_APP_CLIENT_ID).unwrap(),
+            client_secret: app_env::var(oidc::env::ENV_OIDC_APP_CLIENT_SECRET).unwrap(),
         }));
     }
 

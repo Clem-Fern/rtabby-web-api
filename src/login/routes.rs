@@ -89,8 +89,16 @@ async fn login(
     let host = req.connection_info().host().to_string();
     let state = Uuid::new_v4().to_string();
 
-    let login_url =
-        provider.get_login_url(providers_config.get_callback_scheme(), host, state.clone());
+    let login_url = match provider
+        .get_login_url(providers_config.get_callback_scheme(), host, state.clone())
+        .await
+    {
+        Ok(url) => url,
+        Err(e) => {
+            return Ok(HttpResponse::InternalServerError()
+                .body(format!("Unable to get the login URL: {}", e)));
+        }
+    };
 
     let mut response = HttpResponse::TemporaryRedirect()
         .append_header(("Location", login_url))

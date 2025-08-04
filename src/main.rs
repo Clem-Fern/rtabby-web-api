@@ -31,14 +31,15 @@ mod tls;
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    // third-party-login should only be enable by one of the features below (github-login, gitlab-login, google-login, microsoft-login)
+    // third-party-login should only be enable by one of the features below (github-login, gitlab-login, google-login, microsoft-login, oidc-login)
     #[cfg(feature = "third-party-login")]
     {
         #[cfg(not(any(
             feature = "github-login",
             feature = "gitlab-login",
             feature = "google-login",
-            feature = "microsoft-login"
+            feature = "microsoft-login",
+            feature = "oidc-login"
         )))]
         {
             compile_error!(
