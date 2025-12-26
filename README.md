@@ -70,7 +70,7 @@ rtabby-web-api store tabby's configuration in a database. You can choose between
     ```
     Token must be a valid and unique uuid v4. You can create one [here](https://www.uuidgenerator.net/version4).
 
-    rTabby supports OAuth2 providers like Github, Gitlab, Google or Microsoft. You can enable them by adding OAuth client and secret through env var in your `docker-compose.yml`.
+    rTabby supports OAuth2 providers like Github, Gitlab, Google, Microsoft or OpenID Connect (OIDC). You can enable them by adding OAuth client and secret through env var in your `docker-compose.yml`. For OIDC, you'll also need to provide your configuration url (ends with `/.well-known/openid-configuration`).
     OAuth login callback is `/login/{provider}/callback`.
 
     ```yml
@@ -84,6 +84,9 @@ rtabby-web-api store tabby's configuration in a database. You can choose between
       #- GOOGLE_APP_CLIENT_SECRET=
       #- MICROSOFT_APP_CLIENT_ID=
       #- MICROSOFT_APP_CLIENT_SECRET=
+      #- OIDC_APP_CLIENT_ID=
+      #- OIDC_APP_CLIENT_SECRET=
+      #- OIDC_APP_CONFIG_URL=
     ``` 
 
     When using OAuth prividers, browse to `http://<rtabby instance>/login` to authenticate and create your user and token.
