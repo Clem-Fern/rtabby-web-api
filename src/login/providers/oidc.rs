@@ -15,7 +15,6 @@ pub mod env {
 
 static OIDC_CONFIG_CELL: LazyLock<OnceCell<OidcConfiguration>> = LazyLock::new(|| OnceCell::new());
 
-
 #[derive(Deserialize)]
 pub struct OidcConfiguration {
     pub authorization_endpoint: String,
@@ -39,9 +38,9 @@ impl From<OidcUserInfo> for OauthUserInfo {
 }
 
 pub async fn get_oidc_config() -> Result<&'static OidcConfiguration, OauthError> {
-    OIDC_CONFIG_CELL.get_or_try_init(|| async {
-        fetch_oidc_config().await
-    }).await
+    OIDC_CONFIG_CELL
+        .get_or_try_init(|| async { fetch_oidc_config().await })
+        .await
 }
 
 pub async fn fetch_oidc_config() -> Result<OidcConfiguration, OauthError> {

@@ -33,8 +33,10 @@ impl fmt::Display for OauthError {
             Self::UserInfo(ref err) => write!(f, "Unable to retreive OAuth user info: {err}"),
             Self::AccessToken(ref err) => {
                 write!(f, "Unable to retreive OAuth user access token: {err}")
-            },
-            Self::OIDCConfiguration(ref  err) => write!(f, "Unable to retreive OIDC configuration: {err}")
+            }
+            Self::OIDCConfiguration(ref err) => {
+                write!(f, "Unable to retreive OIDC configuration: {err}")
+            }
         }
     }
 }

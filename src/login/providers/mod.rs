@@ -143,12 +143,12 @@ impl Provider {
             #[cfg(feature = "microsoft-login")]
             Self::Microsoft(_) => microsoft::MICROSOFT_OAUTH_AUTHORIZE_URL,
             #[cfg(feature = "oidc-login")]
-            Self::Oidc(_) =>{
+            Self::Oidc(_) => {
                 use crate::login::providers::oidc::OidcConfiguration;
 
-                let oidc_config: &OidcConfiguration = oidc::get_oidc_config().await?;  
+                let oidc_config: &OidcConfiguration = oidc::get_oidc_config().await?;
                 &oidc_config.authorization_endpoint
-            },
+            }
         };
 
         let url = reqwest::Url::parse_with_params(oauth_url, params)
