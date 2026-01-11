@@ -1,6 +1,6 @@
 [package]
 name = "rtabby-web-api"
-version = "0.4.4"
+version = "0.4.5"
 edition = "2021"
 
 [features]
@@ -15,7 +15,7 @@ google-login = ["third-party-login"]
 github-login = ["third-party-login"]
 gitlab-login = ["third-party-login"]
 microsoft-login = ["third-party-login"]
-oidc-login = ["third-party-login"]
+oidc-login = ["third-party-login", "dep:tokio"]
 all-login = ["google-login", "github-login", "gitlab-login", "microsoft-login", "oidc-login"]
 
 [dev-dependencies]
@@ -39,5 +39,5 @@ serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9.34-deprecated"
 uuid = { version = "1", features = ["serde", "v4"] }
 tera = { version = "1", optional = true }
-reqwest = { version = "0.12.4", features = ["json", "rustls-tls"], default-features = false, optional = true }
-tokio = { version = "1.47.1", features = ["sync"] }
+reqwest = { version = "0.12.28", features = ["json", "rustls-tls"], default-features = false, optional = true }
+tokio = { version = "1", features = ["sync"], optional = true}
