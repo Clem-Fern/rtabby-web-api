@@ -13,7 +13,7 @@ pub mod env {
     pub const ENV_OIDC_APP_CONFIG_URL: &str = "OIDC_APP_CONFIG_URL";
 }
 
-static OIDC_CONFIG_CELL: LazyLock<OnceCell<OidcConfiguration>> = LazyLock::new(|| OnceCell::new());
+static OIDC_CONFIG_CELL: LazyLock<OnceCell<OidcConfiguration>> = LazyLock::new(OnceCell::new);
 
 #[derive(Deserialize)]
 pub struct OidcConfiguration {
