@@ -22,6 +22,8 @@ impl fmt::Display for ProviderError {
 pub enum OauthError {
     UserInfo(reqwest::Error),
     AccessToken(reqwest::Error),
+    #[cfg(feature = "oidc-login")]
+    OIDCConfiguration(reqwest::Error),
 }
 
 impl error::Error for OauthError {}
@@ -32,6 +34,10 @@ impl fmt::Display for OauthError {
             Self::UserInfo(ref err) => write!(f, "Unable to retreive OAuth user info: {err}"),
             Self::AccessToken(ref err) => {
                 write!(f, "Unable to retreive OAuth user access token: {err}")
+            }
+            #[cfg(feature = "oidc-login")]
+            Self::OIDCConfiguration(ref err) => {
+                write!(f, "Unable to retreive OIDC configuration: {err}")
             }
         }
     }

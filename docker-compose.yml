@@ -31,6 +31,9 @@ services:
       #- GOOGLE_APP_CLIENT_SECRET=
       #- MICROSOFT_APP_CLIENT_ID=
       #- MICROSOFT_APP_CLIENT_SECRET=
+      #- OIDC_APP_CLIENT_ID=
+      #- OIDC_APP_CLIENT_SECRET=
+      #- OIDC_APP_CONFIG_URL=
 
     volumes:
       - ./config:/config

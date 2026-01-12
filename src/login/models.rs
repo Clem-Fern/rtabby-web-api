@@ -43,7 +43,7 @@ impl User {
     ) -> Result<(), DbError> {
         match conn {
             #[cfg(feature = "mysql")]
-            DbConnection::Mysql(ref mut conn) => {
+            DbConnection::Mysql(conn) => {
                 diesel::insert_into(all_users)
                     .values(&new_user)
                     .execute(conn)?;
